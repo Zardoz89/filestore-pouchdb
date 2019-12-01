@@ -1,3 +1,9 @@
+/**
+ * @file Simple file storage over PouchDb
+ *
+ * Handles a simple file storage over PouchDB. Mimics some functionality of a virtual filesystem like directories and
+ * file hierarchy, but avoids to try to be a full virtual filesystem.
+ */
 import PouchDb from 'pouchdb'
 import FindPlugin from 'pouchdb-find'
 
@@ -69,6 +75,9 @@ function dbDocumentToFileAdapter(dbDocument) {
     dbDocument.blob)
 }
 
+/**
+ * File storage wrapper over a PouchDb database
+ */
 class FileStorage {
   constructor(db) {
     this.db = db
@@ -114,7 +123,7 @@ class FileStorage {
   mkDir(path) {
     const pathElements = File.getPathElements(path)
     const fileName = pathElements[pathElements.length - 1]
-    const id = fileName // TODO hash from blob
+    const id = fileName
     const document = new DbDocument(DOCUMENT_ID_PREFIX + id, pathElements, fileName, null, null)
 
     return this.db.put(document)
