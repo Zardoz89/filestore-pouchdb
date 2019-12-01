@@ -32,10 +32,14 @@ fileStorage.getFileFromHash('texto prueba 99')
   .catch(console.error.bind(console))
 
 fileStorage.getFile('prueba0.txt')
-/*
+  .then(file => console.log(file))
+  .catch(console.error.bind(console))
 fileStorage.getFile('dir/prueba1.txt')
+  .then(file => console.log(file))
+  .catch(console.error.bind(console))
 fileStorage.getFile('dir/prueba99.txt')
-*/
+  .then(file => console.log(file))
+  .catch(console.error.bind(console))
 
 // Se hace esto con un timeout para que no lance el error de mutación
 setTimeout(function () {
