@@ -52,7 +52,7 @@ class FileStorage {
   * Cleans the whole filesystem in database
   */
   format() {
-    this.db.allDocs({ include_docs: true, startkey: DOCUMENT_ID_PREFIX, endkey: DOCUMENT_ID_PREFIX + '\uffff' })
+    return this.db.allDocs({ include_docs: true, startkey: DOCUMENT_ID_PREFIX, endkey: DOCUMENT_ID_PREFIX + '\uffff' })
       .then(allDocs => {
         return allDocs.rows.map(row => {
           return { _id: row.id, _rev: row.doc._rev, _deleted: true }
