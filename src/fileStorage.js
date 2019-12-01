@@ -112,7 +112,7 @@ class FileStorage {
    * @param {string} path - Path of the directory
    */
   mkDir(path) {
-    const pathElements = file.getPathElements()
+    const pathElements = File.getPathElements(path)
     const fileName = pathElements[pathElements.length - 1]
     const id = fileName // TODO hash from blob
     const document = new DbDocument(DOCUMENT_ID_PREFIX + id, pathElements, fileName, null, null)
@@ -170,18 +170,11 @@ class FileStorage {
    * Return all the files stored
    */
   listAllFiles() {
-    /*
-    this.db.query('path', { include_docs: true, attachments: true})
-      .then(result => {
-        console.log(path)
-        console.log(result)
-      })
-      .catch(err => console.error(err))
-    */
     return new Promise((resolve, reject) => {
-      this.db.allDocs({
-        include_docs: true, attachments: true, startkey: DOCUMENT_ID_PREFIX, endkey: DOCUMENT_ID_PREFIX + '\uffff'
-      })
+      this.db.query('path', { include_docs: true, attachments: true })
+      // this.db.allDocs({
+      //  include_docs: true, attachments: true, startkey: DOCUMENT_ID_PREFIX, endkey: DOCUMENT_ID_PREFIX + '\uffff'
+      // })
         .then(result => {
           resolve(result.rows.map(row => dbDocumentToFileAdapter(row.doc)))
         })
