@@ -167,7 +167,7 @@ class FileStorage {
       })
         .then(response => {
           if (!response.docs || response.docs.length === 0) {
-            throw new Error('File with path $path not found')
+            throw new Error(`File with path ${path} not found`)
           }
           resolve(dbDocumentToFileAdapter(response.docs[0]))
         })
