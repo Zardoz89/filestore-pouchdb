@@ -1,7 +1,8 @@
 import FileStorage from './fileStorage.js'
 
-import { assert } from 'chai'
-
+import { assert, expect } from 'chai'
+import { mocha, describe, it } from 'mocha'
+/*
 console.log('Hola')
 
 const fileStorage = FileStorage.initFileSystem()
@@ -58,7 +59,28 @@ setTimeout(function () {
   fileStorage.format()
     .catch(console.error.bind(console))
 }, 1000)
+*/
+mocha.setup('bdd')
 
-assert.fail('custom error message')
+describe('FileStorage.initFileSystem()', function () {
+  it('Must not throw an exception', function () {
+    expect(() => { FileStorage.initFileSystem() }).to.not.throw()
+    // .and.to.not.be.null()
+  })
+
+  it('Return a class instance of FileStorage', function () {
+    const fs = FileStorage.initFileSystem()
+    console.log(fs)
+    expect(fs).to.not.be.null
+      .and.to.have.property('format').that.is.a('function')
+  })
+
+  it('fail', function () {
+    assert.fail('custom error message')
+  })
+})
+
+// mocha.checkLeaks()
+mocha.run()
 
 // vim: set backupcopy=yes :
