@@ -197,6 +197,13 @@ class FileStorage {
   deleteFileFromHash(fileHash) {
     return this.db.remove(fileName)
   }
+
+  /**
+   * Unwraps the PouchDb instance
+   */
+  unwrap() {
+    return this.db
+  }
 }
 
 /**
@@ -240,6 +247,6 @@ function initFileSystem(databaseName) {
   return new FileStorage(db)
 }
 
-export default { File, initFileSystem }
+export default { File, FileStorage, initFileSystem }
 
 // vim: set backupcopy=yes :
