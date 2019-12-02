@@ -1,5 +1,7 @@
 import FileStorage from './fileStorage.js'
 
+import { assert } from 'chai'
+
 console.log('Hola')
 
 const fileStorage = FileStorage.initFileSystem()
@@ -22,7 +24,9 @@ fileStorage.addFile(new FileStorage.File('/dir/subdir/prueba2.txt', 'texto prueb
   .catch(console.error.bind(console))
 
 fileStorage.listAllFiles()
-  .then(files => console.log(files))
+  .then(files => {
+    console.log(files)
+  })
   .catch(console.error.bind(console))
 
 fileStorage.getFileFromHash('texto prueba 0')
@@ -54,5 +58,7 @@ setTimeout(function () {
   fileStorage.format()
     .catch(console.error.bind(console))
 }, 1000)
+
+assert.fail('custom error message')
 
 // vim: set backupcopy=yes :
