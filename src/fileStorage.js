@@ -247,6 +247,6 @@ function initFileSystem(databaseName) {
   return new FileStorage(db)
 }
 
-export default { File, FileStorage, initFileSystem }
+export default { File, FileStorage, initFileSystem, PATH_SEPARATOR }
 
 // vim: set backupcopy=yes :

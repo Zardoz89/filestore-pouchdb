@@ -121,8 +121,8 @@ describe('FileStorage.addFile()', function () {
     }).to.not.throw()
   })
 
-  step('When we add a file to a empty file storage, we should can retrive it', (done) => {
-    fs.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', '', 'hola mundo'))
+  step('When we add a file to a empty file storage, we should can retrive it', () => {
+    return fs.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', '', 'hola mundo'))
       .then(result => {
         return fs.getFile('prueba0.txt')
       })
@@ -130,51 +130,43 @@ describe('FileStorage.addFile()', function () {
         expect(file).to.not.be.null
         expect(file).to.have.property('path', 'prueba0.txt')
         expect(file).to.have.property('logicalName', 'texto prueba 0')
-
-        done()
       })
   })
 
-  step('When we add file with the same hash and without overwrite enabled, it must fail', (done) => {
-    fs.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', '', 'hola mundo'))
+  step('When we add file with the same hash and without overwrite enabled, it must fail', () => {
+    return fs.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', '', 'hola mundo'))
       .then(result => {
         return fs.getFile('prueba0.txt')
       })
       .then(file => {
         expect(file).to.not.be.null
-        fs.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', '', 'adios mundo'))
-          .then(result => assert.fail('addFile must fail when try to overwrite the file without the flag.'))
-          .catch(err => {
-            // TODO Return a proper error and not PouchDb error object
-            expect(err).to.have.property('name', 'conflict')
-            console.trace(err)
-          })
-
-        done()
+        return fs.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', '', 'adios mundo'))
+      })
+      .then(result => assert.fail('addFile must fail when try to overwrite the file without the flag.'), err => {
+        // TODO Return a proper error and not PouchDb error object
+        console.trace(err)
+        expect(err).to.have.property('name', 'conflict')
       })
   })
 
-  xstep('When we add file with the same path and without overwrite enabled, it must fail', (done) => {
-    fs.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', '', 'hola mundo'))
+  xstep('When we add file with the same path and without overwrite enabled, it must fail', () => {
+    return fs.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', '', 'hola mundo'))
       .then(result => {
         return fs.getFile('prueba0.txt')
       })
       .then(file => {
         expect(file).to.not.be.null
         fs.addFile(new FileStorage.File('/dir1/prueba0.txt', 'texto prueba 0', '', 'adios mundo'))
-          .then(result => assert.fail('addFile must fail when try to overwrite the file without the flag.'))
-          .catch(err => {
+          .then(result => assert.fail('addFile must fail when try to overwrite the file without the flag.'), err => {
             // TODO Return a proper error and not PouchDb error object
-            expect(err).to.have.property('name', 'conflict')
             console.trace(err)
+            expect(err).to.have.property('name', 'conflict')
           })
-
-        done()
       })
   })
 
-  xstep('When we add file with overwrite, it must replace the old file with the same path', (done) => {
-    fs.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', '', 'hola mundo'))
+  xstep('When we add file with overwrite, it must replace the old file with the same path', () => {
+    return fs.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', '', 'hola mundo'))
       .then(result => {
         return fs.getFile('prueba0.txt')
       })
@@ -190,8 +182,6 @@ describe('FileStorage.addFile()', function () {
         expect(file).to.not.be.null
         expect(file).to.have.property('path', 'prueba0.txt')
         expect(file).to.have.property('logicalName', 'texto prueba 0 bis')
-
-        done()
       })
   })
 })
@@ -214,8 +204,8 @@ describe('FileStorage.mkDir()', function () {
     }
   })
 
-  step('Creating a dir, generates a special file without data', (done) => {
-    fs.mkDir('dir1')
+  step('Creating a dir, generates a special file without data', () => {
+    return fs.mkDir('dir1')
       .then(result => {
         return fs.getFile('dir1')
       })
@@ -224,24 +214,29 @@ describe('FileStorage.mkDir()', function () {
         expect(file).to.have.property('path', 'dir1')
         expect(file).to.have.property('logicalName', 'dir1')
         expect(file).to.have.property('blob', null)
-
-        done()
       })
   })
 
-  // TODO
-  xstep('Creating a subdir, requieres a father directory', (done) => {
-    fs.mkDir('dir1')
+  step('Creating a subdir, requieres a father directory', () => {
+    return fs.mkDir('dir1')
       .then(result => {
-        return fs.getFile('dir1')
+        return fs.mkDir('dir1/subdir')
+      })
+      .then(result => {
+        return fs.getFile('dir1/subdir')
       })
       .then(file => {
         expect(file).to.not.be.null
-        expect(file).to.have.property('path', 'dir1')
-        expect(file).to.have.property('logicalName', 'dir1')
+        expect(file).to.have.property('path', 'dir1/subdir')
+        expect(file).to.have.property('logicalName', 'subdir')
         expect(file).to.have.property('blob', null)
 
-        done()
+        return fs.mkDir('missigno/subdir2')
+      })
+      .then(result => assert.fail('mkDir must fail when try to create a subdirectory.'), err => {
+        // TODO Return a proper error and not PouchDb error object
+        console.trace(err)
+        expect(err).to.have.property('name', 'conflict')
       })
   })
 })
