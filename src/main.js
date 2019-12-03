@@ -1,7 +1,8 @@
 import FileStorage from './fileStorage.js'
 
 import { assert, expect } from 'chai'
-import { mocha, describe, it, beforeEach, afterEach } from 'mocha'
+import { mocha, describe, beforeEach, afterEach } from 'mocha'
+import { step } from 'mocha-steps'
 /*
 console.log('Hola')
 
@@ -73,12 +74,11 @@ describe('FileStorage.initFileSystem()', () => {
     // .catch(err => assert.fail(`Error destroying database : ${err}`))
   })
 
-  it('Must not throw an exception', () => {
+  step('Must not throw an exception', () => {
     expect(() => { fs = FileStorage.initFileSystem() }).to.not.throw()
-    // .and.to.not.be.null()
   })
 
-  it('Return a class instance of FileStorage', () => {
+  step('Return a class instance of FileStorage', () => {
     fs = FileStorage.initFileSystem()
     console.log(fs)
     expect(fs).to.not.be.null
@@ -87,7 +87,6 @@ describe('FileStorage.initFileSystem()', () => {
   })
 })
 
-/*
 describe('FileStorage.addFile()', function () {
   let fs = null
 
@@ -95,15 +94,26 @@ describe('FileStorage.addFile()', function () {
     fs = FileStorage.initFileSystem()
   })
 
-  afterEach(function () {
-    fs.unwrap().destroy()
-      .catch(err => assert.fail(`Error destroying database : ${err}`))
+  afterEach(() => {
+    if (fs !== null) {
+      return fs.unwrap().destroy()
+    }
   })
 
-  it('Return a succesfull promise on a empty FileStorage', function () {
+  step('Return a succesfull promise on a empty FileStorage', (done) => {
+    fs.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', '', 'hola mundo'))
+      .then(result => {
+        return fs.getFile('prueba0.txt')
+      })
+      .then(file => {
+        expect(file).to.not.be.null
+        expect(file).to.have.property('path', 'prueba0.txt')
+
+        done()
+      })
   })
 })
-*/
+
 // mocha.checkLeaks()
 mocha.run()
 
