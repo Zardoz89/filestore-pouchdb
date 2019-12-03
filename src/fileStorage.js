@@ -66,6 +66,70 @@ class File {
     return pathElements.join(PATH_SEPARATOR)
   }
 }
+
+/**
+ * Base clase for all FileStorage errors
+ *
+ * @property pouchDbError PouchDb error if there was an error throw by PouchDb
+ */
+class FileStoreError extends Error {
+  constructor(pouchDbError = {}, ...params) {
+    super(...params)
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, FileStoreError)
+    }
+
+    this.name = this.constructor.name
+    this.pouchDbError = pouchDbError
+  }
+}
+
+/**
+ * File not found error
+ */
+class FileNotFoundError extends FileStoreError {
+  constructor(pouchDbError = {}, ...params) {
+    super(pouchDbError, ...params)
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, FileNotFoundError)
+    }
+
+    this.name = this.constructor.name
+  }
+}
+
+/**
+ * Duplicate file error
+ */
+class FileWithSameHashExists extends FileStoreError {
+  constructor(pouchDbError = {}, ...params) {
+    super(pouchDbError, ...params)
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, FileWithSameHashExists)
+    }
+
+    this.name = this.constructor.name
+  }
+}
+
+/**
+ * File with the same path
+ */
+class FileWithSamePath extends FileStoreError {
+  constructor(pouchDbError = {}, ...params) {
+    super(pouchDbError, ...params)
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, FileWithSamePath)
+    }
+
+    this.name = this.constructor.name
+  }
+}
+
 /**
  * Adapter function that generated a valid File class from a DbDocument class
  * @param {DbDocument} dbDocument
@@ -103,15 +167,63 @@ class FileStorage {
   * @param file File that contains the data and the metadata
   * @param {object} [options] - Options
   * @param {object} [options.overwrite] - Overwrites any existing previous file
+  * @return file hash
   */
-  addFile(file, options) {
-    // TODO options
+  async addFile(file, options = { overwrite: false }) {
     const pathElements = file.getPathElements()
-    const fileName = file.logicalName
-    const id = fileName // TODO hash from blob
-    const document = new DbDocument(DOCUMENT_ID_PREFIX + id, pathElements, fileName, '', file.blob)
+    const hash = file.logicalName // TODO hash from blob
+    const id = DOCUMENT_ID_PREFIX + hash
 
-    return this.db.put(document)
+    const document = new DbDocument(id, pathElements, file.logicalName, '', file.blob)
+
+    const originalDoc = await this.db.get(id)
+      .catch((err) => {
+        if (err.name !== 'not_found') {
+          throw new FileStoreError(err, `Unknow error : ${err}`)
+        }
+      })
+    if (originalDoc !== undefined) {
+      if (!options.overwrite) {
+        throw new FileWithSameHashExists(`File with the same content exists. Use options.overwrite = true to replace it. Hash: ${hash}`)
+      } else {
+        document._rev = originalDoc._rev
+      }
+    }
+
+    // Check if a file with the same path exists and throw error if overwrite is false and it isn't originalDoc
+    const documentsWithSamePath = await this.db.find({
+      selector: {
+        pathElements: { $eq: pathElements }
+      },
+      fields: ['_id']
+    }).catch(err => { throw new FileStoreError(err, `Unknow error : ${err}`) })
+
+    if (documentsWithSamePath.docs.length > 0) {
+      // We delete the docs with the same path
+      if (options.overwrite) {
+        console.log(document)
+        console.log('docs1', documentsWithSamePath.docs)
+        const docs = documentsWithSamePath.docs.map(doc => {
+          return { _id: doc._id, _rev: doc._rev, _deleted: true }
+        })
+          .filter(doc => doc._id !== document._id)
+        console.log('docs2', docs)
+        await this.db.bulkDocs(docs)
+          .catch((err) => {
+            if (err.name !== 'not_found') {
+              throw new FileStoreError(err, `Unknow error : ${err}`)
+            }
+          })
+      } else {
+        throw new FileWithSamePath(`File with the same path exists. Use options.overwrite = true to replace it. Path: ${file.path}`)
+      }
+    }
+
+    await this.db.put(document)
+      .catch((err) => {
+        throw new FileStoreError(err, `Unknow error : ${err}`)
+      })
+    return hash
   }
 
   /**
@@ -119,9 +231,14 @@ class FileStorage {
    *
    * A directory consists on a file with empty data
    * @param {string} path - Path of the directory
+   * @param {object} [options - Options
+   * @param {object} [options.parent] - Makes father directories. If father directories exists, don't fail
    */
-  mkDir(path) {
+  mkDir(path, options) {
+    // const { parent = false } = options
+
     const pathElements = File.getPathElements(path)
+
     const fileName = pathElements[pathElements.length - 1]
     const id = fileName
     const document = new DbDocument(DOCUMENT_ID_PREFIX + id, pathElements, fileName, null, null)
@@ -136,6 +253,7 @@ class FileStorage {
    * @param {object} [options.recursive] - Delete all content of the directory on a recursive way
    */
   rmDir(path, options) {
+    // const { recursive = false } = options
     // TODO
   }
 
@@ -143,36 +261,34 @@ class FileStorage {
    * Return a file using his hash
    * @param {string} fileHash
    */
-  getFileFromHash(fileHash) {
-    return new Promise((resolve, reject) => {
-      this.db.get(DOCUMENT_ID_PREFIX + fileHash)
-        .then(doc => {
-          resolve(dbDocumentToFileAdapter(doc))
-        })
-        .catch(err => reject(err))
-    })
+  async getFileFromHash(fileHash) {
+    const doc = await this.db.get(DOCUMENT_ID_PREFIX + fileHash)
+      .catch(err => {
+        if (err.name === 'not_found') {
+          throw new FileNotFoundError(err, `File with hash ${fileHash} not found.`)
+        } else {
+          throw new FileStoreError(err, `Unknow error : ${err}`)
+        }
+      })
+    return dbDocumentToFileAdapter(doc)
   }
 
   /**
    * Return a file using his path
    * @param {string} path
    */
-  getFile(path) {
-    return new Promise((resolve, reject) => {
-      const pathElements = File.getPathElements(path)
-      this.db.find({
-        selector: {
-          pathElements: { $eq: pathElements }
-        }
-      })
-        .then(response => {
-          if (!response.docs || response.docs.length === 0) {
-            throw new Error(`File with path ${path} not found`)
-          }
-          resolve(dbDocumentToFileAdapter(response.docs[0]))
-        })
-        .catch(err => reject(err))
-    })
+  async getFile(path) {
+    const pathElements = File.getPathElements(path)
+    const response = await this.db.find({
+      selector: {
+        pathElements: { $eq: pathElements }
+      }
+    }).catch(err => { throw new FileStoreError(err, `Unknow error : ${err}`) })
+
+    if (!response.docs || response.docs.length === 0) {
+      throw new FileNotFoundError(`File with path ${path} not found.`)
+    }
+    return dbDocumentToFileAdapter(response.docs[0])
   }
 
   /**
@@ -207,18 +323,18 @@ class FileStorage {
 }
 
 /**
- * Initialice a filse system in a PouchDb
+ * Initialice a file system in a PouchDb database
  * @param {string} [databaseName] - The name of the database to use
- * @return A valid instance of FileStorage
+ * @return {Promise} A valid instance of FileStorage
  */
-function initFileSystem(databaseName) {
+async function initFileSystem(databaseName) {
   if (!databaseName || databaseName === '') {
     databaseName = DEFAULT_DATABASE_NAME
   }
   const db = new PouchDb(databaseName)
 
   // Adds a index to quickly search by path
-  db.createIndex({
+  await db.createIndex({
     index: {
       fields: ['pathElements']
     }
@@ -236,7 +352,7 @@ function initFileSystem(databaseName) {
       }
     }
   }
-  db.put(pathViewDocument)
+  await db.put(pathViewDocument)
     .catch(err => {
       if (err.name !== 'conflict') {
         console.error(err)
@@ -247,6 +363,6 @@ function initFileSystem(databaseName) {
   return new FileStorage(db)
 }
 
-export default { File, FileStorage, initFileSystem }
+export default { File, FileStorage, initFileSystem, PATH_SEPARATOR, FileStoreError, FileNotFoundError, FileWithSameHashExists, FileWithSamePath }
 
 // vim: set backupcopy=yes :

@@ -29,6 +29,7 @@
     "parcel-bundler": "^1.12.4"
   },
   "dependencies": {
+    "chai-as-promised": "^7.1.1",
     "pouchdb": "^7.1.1",
     "pouchdb-browser": "^7.1.1",
     "pouchdb-find": "^7.1.1"
