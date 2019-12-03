@@ -1,7 +1,7 @@
 import FileStorage from './fileStorage.js'
 
 import { assert, expect } from 'chai'
-import { mocha, describe, it } from 'mocha'
+import { mocha, describe, it, beforeEach, afterEach } from 'mocha'
 /*
 console.log('Hola')
 
@@ -62,24 +62,48 @@ setTimeout(function () {
 */
 mocha.setup('bdd')
 
-describe('FileStorage.initFileSystem()', function () {
-  it('Must not throw an exception', function () {
-    expect(() => { FileStorage.initFileSystem() }).to.not.throw()
+describe('FileStorage.initFileSystem()', () => {
+  let fs = null
+
+  afterEach(() => {
+    if (fs !== null) {
+      return fs.unwrap().destroy()
+    }
+    // .then(result => assert(1 === 1))
+    // .catch(err => assert.fail(`Error destroying database : ${err}`))
+  })
+
+  it('Must not throw an exception', () => {
+    expect(() => { fs = FileStorage.initFileSystem() }).to.not.throw()
     // .and.to.not.be.null()
   })
 
-  it('Return a class instance of FileStorage', function () {
-    const fs = FileStorage.initFileSystem()
+  it('Return a class instance of FileStorage', () => {
+    fs = FileStorage.initFileSystem()
     console.log(fs)
     expect(fs).to.not.be.null
-      .and.to.have.property('format').that.is.a('function')
-  })
-
-  it('fail', function () {
-    assert.fail('custom error message')
+    expect(fs).to.have.property('format').that.is.a('function')
+    expect(fs).to.have.property('unwrap').that.is.a('function')
   })
 })
 
+/*
+describe('FileStorage.addFile()', function () {
+  let fs = null
+
+  beforeEach(function () {
+    fs = FileStorage.initFileSystem()
+  })
+
+  afterEach(function () {
+    fs.unwrap().destroy()
+      .catch(err => assert.fail(`Error destroying database : ${err}`))
+  })
+
+  it('Return a succesfull promise on a empty FileStorage', function () {
+  })
+})
+*/
 // mocha.checkLeaks()
 mocha.run()
 

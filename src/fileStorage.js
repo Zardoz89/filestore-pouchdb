@@ -197,6 +197,13 @@ class FileStorage {
   deleteFileFromHash(fileHash) {
     return this.db.remove(fileName)
   }
+
+  /**
+   * Unwraps the PouchDb instance
+   */
+  unwrap() {
+    return this.db
+  }
 }
 
 /**

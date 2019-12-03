@@ -13,6 +13,9 @@
         "named": "never",
         "asyncArrow": "always"
     }],
-    "no-new": "off"
+    "no-new": "off",
+
+    "no-unused-expressions": ["off"],
+    "no-extra-parens": ["off"]
   }
 }
