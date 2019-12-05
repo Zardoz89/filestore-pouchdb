@@ -105,7 +105,8 @@ class FileStorage {
   * @param {object} [options.overwrite] - Overwrites any existing previous file
   */
   addFile(file, options) {
-    // TODO options
+    // const { overwrite = false } = options
+
     const pathElements = file.getPathElements()
     const fileName = file.logicalName
     const id = fileName // TODO hash from blob
@@ -119,9 +120,14 @@ class FileStorage {
    *
    * A directory consists on a file with empty data
    * @param {string} path - Path of the directory
+   * @param {object} [options - Options
+   * @param {object} [options.parent] - Makes father directories. If father directories exists, don't fail
    */
-  mkDir(path) {
+  mkDir(path, options) {
+    // const { parent = false } = options
+
     const pathElements = File.getPathElements(path)
+
     const fileName = pathElements[pathElements.length - 1]
     const id = fileName
     const document = new DbDocument(DOCUMENT_ID_PREFIX + id, pathElements, fileName, null, null)
@@ -136,6 +142,7 @@ class FileStorage {
    * @param {object} [options.recursive] - Delete all content of the directory on a recursive way
    */
   rmDir(path, options) {
+    // const { recursive = false } = options
     // TODO
   }
 
@@ -207,18 +214,18 @@ class FileStorage {
 }
 
 /**
- * Initialice a filse system in a PouchDb
+ * Initialice a file system in a PouchDb database
  * @param {string} [databaseName] - The name of the database to use
- * @return A valid instance of FileStorage
+ * @return {Promise} A valid instance of FileStorage
  */
-function initFileSystem(databaseName) {
+async function initFileSystem(databaseName) {
   if (!databaseName || databaseName === '') {
     databaseName = DEFAULT_DATABASE_NAME
   }
   const db = new PouchDb(databaseName)
 
   // Adds a index to quickly search by path
-  db.createIndex({
+  await db.createIndex({
     index: {
       fields: ['pathElements']
     }
@@ -236,7 +243,7 @@ function initFileSystem(databaseName) {
       }
     }
   }
-  db.put(pathViewDocument)
+  await db.put(pathViewDocument)
     .catch(err => {
       if (err.name !== 'conflict') {
         console.error(err)
