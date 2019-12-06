@@ -108,22 +108,22 @@ describe('FileStorage', function () {
         })
     })
 
-    step('When we add file with the same hash and without overwrite enabled, it must fail', () => {
-      return fss.empty.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', '', 'adios mundo'))
-        .then(result => assert.fail('addFile must fail when try to overwrite the file without the flag.'), err => {
-          // TODO Return a proper error and not PouchDb error object
-          console.trace(err)
-          expect(err).to.have.property('name', 'conflict')
-        })
+    step('When we add file with the same hash and without overwrite enabled, it must fail', async function () {
+      await fss.empty.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', '', 'adios mundo'))
+        .then(result => assert.fail('addFile must fail when try to overwrite the file without the flag.'),
+          err => {
+            expect(err).to.be.instanceof(FileStorage.FileWithSameHashExists)
+          })
     })
 
     xstep('When we add file with the same path and without overwrite enabled, it must fail', () => {
       return fss.empty.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 0x0', '', 'adios mundo'))
-        .then(result => assert.fail('addFile must fail when try to overwrite the file without the flag.'), err => {
-          // TODO Return a proper error and not PouchDb error object
-          console.trace(err)
-          expect(err).to.have.property('name', 'conflict')
-        })
+        .then(result => assert.fail('addFile must fail when try to overwrite the file without the flag.'),
+          err => {
+            // TODO Return a proper error and not PouchDb error object
+            console.trace(err)
+            expect(err).to.have.property('name', 'conflict')
+          })
     })
 
     xstep('When we add file with overwrite, it must replace the old file with the same path', () => {

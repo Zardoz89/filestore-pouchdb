@@ -67,8 +67,13 @@ class File {
   }
 }
 
+/**
+ * Base clase for all FileStorage errors
+ *
+ * @property pouchDbError PouchDb error if there was an error throw by PouchDb
+ */
 class FileStoreError extends Error {
-  constructor(...params) {
+  constructor(pouchDbError = {}, ...params) {
     super(...params)
     // Maintains proper stack trace for where our error was thrown (only available on V8)
     if (Error.captureStackTrace) {
@@ -76,15 +81,34 @@ class FileStoreError extends Error {
     }
 
     this.name = this.constructor.name
+    this.pouchDbError = pouchDbError
   }
 }
 
+/**
+ * File not found error
+ */
 class FileNotFoundError extends FileStoreError {
-  constructor(...params) {
-    super(...params)
+  constructor(pouchDbError = {}, ...params) {
+    super(pouchDbError, ...params)
 
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, FileNotFoundError)
+    }
+
+    this.name = this.constructor.name
+  }
+}
+
+/**
+ * Duplicate file error
+ */
+class FileWithSameHashExists extends FileStoreError {
+  constructor(pouchDbError = {}, ...params) {
+    super(pouchDbError, ...params)
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, FileWithSameHashExists)
     }
 
     this.name = this.constructor.name
@@ -128,16 +152,34 @@ class FileStorage {
   * @param file File that contains the data and the metadata
   * @param {object} [options] - Options
   * @param {object} [options.overwrite] - Overwrites any existing previous file
+  * @return file hash
   */
-  addFile(file, options) {
-    // const { overwrite = false } = options
-
+  async addFile(file, options = { overwrite: false }) {
     const pathElements = file.getPathElements()
-    const fileName = file.logicalName
-    const id = fileName // TODO hash from blob
-    const document = new DbDocument(DOCUMENT_ID_PREFIX + id, pathElements, fileName, '', file.blob)
+    const hash = file.logicalName // TODO hash from blob
+    const id = DOCUMENT_ID_PREFIX + hash
 
-    return this.db.put(document)
+    const originalDoc = await this.db.get(id)
+      .catch((err) => {
+        if (err.name !== 'not_found') {
+          throw new FileStoreError(err, `Unknow error : ${err}`)
+        }
+      })
+    if (originalDoc !== undefined && !options.overwrite) {
+      throw new FileWithSameHashExists(`File with the same content exists. Use options.overwrite = true to replace it. Hash: ${hash}`)
+    } else {
+      // TODO overwrite
+      console.log('Not implemented yet')
+    }
+
+    // TODO Check if a file with the same path exists and throw error if overwrite is false
+
+    const document = new DbDocument(id, pathElements, file.logicalName, '', file.blob)
+    await this.db.put(document)
+      .catch((err) => {
+        throw new FileStoreError(err, `Unknow error : ${err}`)
+      })
+    return hash
   }
 
   /**
@@ -179,9 +221,9 @@ class FileStorage {
     const doc = await this.db.get(DOCUMENT_ID_PREFIX + fileHash)
       .catch(err => {
         if (err.name === 'not_found') {
-          throw new FileNotFoundError(`File with hash ${fileHash} not found.`)
+          throw new FileNotFoundError(err, `File with hash ${fileHash} not found.`)
         } else {
-          throw new FileStoreError(`Unknow error : ${err}`)
+          throw new FileStoreError(err, `Unknow error : ${err}`)
         }
       })
     return dbDocumentToFileAdapter(doc)
@@ -197,7 +239,7 @@ class FileStorage {
       selector: {
         pathElements: { $eq: pathElements }
       }
-    }).catch(err => { throw new FileStoreError(`Unknow error : ${err}`) })
+    }).catch(err => { throw new FileStoreError(err, `Unknow error : ${err}`) })
 
     if (!response.docs || response.docs.length === 0) {
       throw new FileNotFoundError(`File with path ${path} not found.`)
@@ -277,6 +319,6 @@ async function initFileSystem(databaseName) {
   return new FileStorage(db)
 }
 
-export default { File, FileStorage, initFileSystem, PATH_SEPARATOR, FileStoreError, FileNotFoundError }
+export default { File, FileStorage, initFileSystem, PATH_SEPARATOR, FileStoreError, FileNotFoundError, FileWithSameHashExists }
 
 // vim: set backupcopy=yes :
