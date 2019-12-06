@@ -1,8 +1,11 @@
 import FileStorage from './fileStorage.js'
 
-import { expect, assert } from 'chai'
+import { expect, assert, use } from 'chai'
+import chaiAsPromised from 'chai-as-promised'
 import { mocha, describe, it, before, after, afterEach } from 'mocha'
 import { step, xstep } from 'mocha-steps'
+
+use(chaiAsPromised)
 
 mocha.setup('bdd')
 
@@ -61,32 +64,13 @@ describe('FileStorage', function () {
 
   describe('#initFileSystem()', function () {
     this.slow(1000)
-    let fs = null
 
-    afterEach(async function () {
-      if (fs !== null) {
-        await new Promise((resolve) => {
-          setTimeout(() => {
-            return resolve(fs.unwrap().destroy())
-          }, 250)
-        })
-      }
-      // if (fs !== null) {
-      //  return fs.unwrap().destroy()
-      // }
-      // .then(result => assert(1 === 1))
-      // .catch(err => assert.fail(`Error destroying database : ${err}`))
-    })
-
-    step('Must not throw an exception', () => {
-      expect(() => { FileStorage.initFileSystem().then((newFs) => { fs = newFs }) }).to.not.throw()
-    })
-
-    step('Return a class instance of FileStorage', async () => {
-      fs = await FileStorage.initFileSystem()
-      expect(fs).to.not.be.null
+    step('To return a FileStorage instance', async function () {
+      const fs = await FileStorage.initFileSystem()
       expect(fs).to.have.property('format').that.is.a('function')
       expect(fs).to.have.property('unwrap').that.is.a('function')
+
+      await fs.unwrap().destroy()
     })
   })
 
