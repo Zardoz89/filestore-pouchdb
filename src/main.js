@@ -177,6 +177,20 @@ describe('FileStorage', function () {
     })
   })
 
+  describe('#deleteFromHash ()', function () {
+    step('Deleting an existing file, must return true', async function () {
+      const hash = await fss.populated.addFile(new FileStorage.File('deleted1.txt', 'deleted1', '', 'adios mundo'))
+      console.log(hash)
+      await expect(fss.populated.deleteFromHash(hash))
+        .to.eventually.equal(true)
+    })
+
+    step('Deleting an non existing file, must return false', async function () {
+      await expect(fss.populated.deleteFromHash('missigno_hash'))
+        .to.eventually.equal(false)
+    })
+  })
+
   describe('#delete()', function () {
     xstep('Deleting an existing file, must return true', async function () {
       await expect(fss.populated.delete('dir1/subdir2/prueba1.txt'))

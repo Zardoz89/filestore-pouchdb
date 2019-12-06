@@ -112,16 +112,25 @@ class FileStorage {
   /**
   * Cleans the whole filesystem in database
   */
-  format() {
-    return this.db.allDocs({ include_docs: true, startkey: DOCUMENT_ID_PREFIX, endkey: DOCUMENT_ID_PREFIX + '\uffff' })
-      .then(allDocs => {
-        return allDocs.rows.map(row => {
-          return { _id: row.id, _rev: row.doc._rev, _deleted: true }
-        })
+  async format() {
+    let allDocs = await this.db.allDocs({ include_docs: true, startkey: DOCUMENT_ID_PREFIX, endkey: DOCUMENT_ID_PREFIX + '\uffff' })
+      .catch((err) => {
+        if (err.name !== 'not_found') {
+          throw new FileStoreError(err, `Unknow error : ${err}`)
+        }
       })
-      .then(deleteDocs => {
-        return this.db.bulkDocs(deleteDocs)
+
+    allDocs = allDocs.rows.map(row => {
+      return { _id: row.id, _rev: row.doc._rev, _deleted: true }
+    })
+
+    await this.db.bulkDocs(allDocs)
+      .catch((err) => {
+        if (err.name !== 'not_found') {
+          throw new FileStoreError(err, `Unknow error : ${err}`)
+        }
       })
+    return true
   }
 
   /**
@@ -163,13 +172,11 @@ class FileStorage {
     if (documentsWithSamePath.docs.length > 0) {
       // We delete the docs with the same path
       if (options.overwrite) {
-        console.log(document)
-        console.log('docs1', documentsWithSamePath.docs)
         const docs = documentsWithSamePath.docs.map(doc => {
           return { _id: doc._id, _rev: doc._rev, _deleted: true }
         })
           .filter(doc => doc._id !== document._id)
-        console.log('docs2', docs)
+
         await this.db.bulkDocs(docs)
           .catch((err) => {
             if (err.name !== 'not_found') {
@@ -195,8 +202,9 @@ class FileStorage {
    * @param {string} path - Path of the directory
    * @param {object} [options - Options
    * @param {object} [options.parent] - Makes father directories. If father directories exists, don't fail
+   * @return Directory hash
    */
-  mkDir(path, options = { parents: false }) {
+  async mkDir(path, options = { parents: false }) {
     const directory = new Directory(path, name)
     return this.addFile(directory)
   }
@@ -207,14 +215,14 @@ class FileStorage {
    * @param {object} [options] - Options
    * @param {object} [options.recursive] - Delete all content of the directory on a recursive way
    */
-  rmDir(path, options) {
-    // const { recursive = false } = options
+  async rmDir(path, options = { recursive: false }) {
     // TODO
   }
 
   /**
    * Return a file using his hash
-   * @param {string} fileHash
+   * @param {string} fileHash Hash of the file
+   * @return A instance of File if the hash points to a valid file or directory
    */
   async getFileFromHash(fileHash) {
     const doc = await this.db.get(DOCUMENT_ID_PREFIX + fileHash)
@@ -230,7 +238,8 @@ class FileStorage {
 
   /**
    * Return a file using his path
-   * @param {string} path
+   * @param {string} path Path to the file
+   * @return A instance of File if the path points to a valid file or directory
    */
   async getFile(path) {
     const pathElements = File.getPathElements(path)
@@ -248,25 +257,46 @@ class FileStorage {
 
   /**
    * Return all the files stored
+   * @param {object} options
+   * @param {object} [options.onlyPaths] - Only retrives the paths
+   * @return {array} A sorted array of File or a sorted array of strings with the paths if onlyPaths is true
    */
-  listAllFiles() {
-    return new Promise((resolve, reject) => {
-      this.db.query('path', { include_docs: true, attachments: true })
-      // this.db.allDocs({
-      //  include_docs: true, attachments: true, startkey: DOCUMENT_ID_PREFIX, endkey: DOCUMENT_ID_PREFIX + '\uffff'
-      // })
-        .then(result => {
-          resolve(result.rows.map(row => dbDocumentToFileAdapter(row.doc)))
-        })
-        .catch(err => reject(err))
-    })
+  async listAllFiles(options = { onlyPaths: false }) {
+    const allDocs = await this.db.query('path', { include_docs: true, attachments: !options.onlyPaths })
+      .catch(err => {
+        throw new FileStoreError(err, `Unknow error : ${err}`)
+      })
+    if (options.onlyPaths) {
+      return allDocs.rows.map(row => dbDocumentToFileAdapter(row.doc).path)
+    } else {
+      return allDocs.rows.map(row => dbDocumentToFileAdapter(row.doc))
+    }
   }
 
   /**
    * Search a file by his hash and deleted it
+   * @param filehash - Hash of the file to be deleted
+   * @return {boolean} True if the file exists and is been deleted. False if the file doesn't exists
    */
-  deleteFileFromHash(fileHash) {
-    return this.db.remove(fileName)
+  async deleteFromHash(fileHash) {
+    const doc = await this.db.get(DOCUMENT_ID_PREFIX + fileHash, { attachments: false })
+      .catch(err => {
+        if (err.name !== 'not_found') {
+          throw new FileStoreError(err, `Unknow error : ${err}`)
+        }
+        return false
+      })
+    if (!doc) {
+      return false
+    }
+
+    return this.db.remove(doc._id, doc._rev)
+      .catch(err => {
+        throw new FileStoreError(err, `Unknow error : ${err}`)
+      })
+      .then(result => {
+        return result.ok
+      })
   }
 
   /**
