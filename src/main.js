@@ -133,6 +133,50 @@ describe('FileStorage', function () {
     })
   })
 
+  describe('#getFileFromHash()', function () {
+    step('Searching an existing file by hash, must return it', async function () {
+      const file1 = await fss.populated2.getFileFromHash('texto prueba 0')
+      expect(file1).to.not.be.null
+      expect(file1).to.have.property('path', 'prueba0.txt')
+      expect(file1).to.have.property('logicalName', 'texto prueba 0')
+
+      const file2 = await fss.populated2.getFileFromHash('texto prueba 1')
+      expect(file2).to.not.be.null
+      expect(file2).to.have.property('path', 'dir1/subdir2/prueba1.txt')
+      expect(file2).to.have.property('logicalName', 'texto prueba 1')
+    })
+
+    step('Searching a not existing file by hash, must fail', async function () {
+      await fss.populated2.getFileFromHash('texto prueba missgno')
+        .then(result => assert.fail('getFileFromHash must fail when try to get a not existing file.'),
+          err => {
+            expect(err).to.be.instanceof(FileStorage.FileNotFoundError)
+          })
+    })
+  })
+
+  describe('#getFile()', function () {
+    step('Searching an existing file by path, must return it', async function () {
+      const file1 = await fss.populated2.getFile('prueba0.txt')
+      expect(file1).to.not.be.null
+      expect(file1).to.have.property('path', 'prueba0.txt')
+      expect(file1).to.have.property('logicalName', 'texto prueba 0')
+
+      const file2 = await fss.populated2.getFile('dir1/subdir2/prueba1.txt')
+      expect(file2).to.not.be.null
+      expect(file2).to.have.property('path', 'dir1/subdir2/prueba1.txt')
+      expect(file2).to.have.property('logicalName', 'texto prueba 1')
+    })
+
+    step('Searching a not existing file by path, must fail', async function () {
+      await fss.populated2.getFile('missgno.txt')
+        .then(result => assert.fail('getFile must fail when try to get a not existing file.'),
+          err => {
+            expect(err).to.be.instanceof(FileStorage.FileNotFoundError)
+          })
+    })
+  })
+
   describe('#delete()', function () {
     xstep('Deleting an existing file, must return true', async function () {
       await expect(fss.populated.delete('dir1/subdir2/prueba1.txt'))
@@ -218,50 +262,6 @@ describe('FileStorage', function () {
 
     xstep('Deleting a whole directory structure with recursive', function () {
       return fss.empty.rmDir('dir1', { recursive: true })
-    })
-  })
-
-  describe('#getFileFromHash()', function () {
-    step('Searching an existing file by hash, must return it', async function () {
-      const file1 = await fss.populated2.getFileFromHash('texto prueba 0')
-      expect(file1).to.not.be.null
-      expect(file1).to.have.property('path', 'prueba0.txt')
-      expect(file1).to.have.property('logicalName', 'texto prueba 0')
-
-      const file2 = await fss.populated2.getFileFromHash('texto prueba 1')
-      expect(file2).to.not.be.null
-      expect(file2).to.have.property('path', 'dir1/subdir2/prueba1.txt')
-      expect(file2).to.have.property('logicalName', 'texto prueba 1')
-    })
-
-    step('Searching a not existing file by hash, must fail', async function () {
-      await fss.populated2.getFileFromHash('texto prueba missgno')
-        .then(result => assert.fail('getFileFromHash must fail when try to get a not existing file.'),
-          err => {
-            expect(err).to.be.instanceof(FileStorage.FileNotFoundError)
-          })
-    })
-  })
-
-  describe('#getFile()', function () {
-    step('Searching an existing file by path, must return it', async function () {
-      const file1 = await fss.populated2.getFile('prueba0.txt')
-      expect(file1).to.not.be.null
-      expect(file1).to.have.property('path', 'prueba0.txt')
-      expect(file1).to.have.property('logicalName', 'texto prueba 0')
-
-      const file2 = await fss.populated2.getFile('dir1/subdir2/prueba1.txt')
-      expect(file2).to.not.be.null
-      expect(file2).to.have.property('path', 'dir1/subdir2/prueba1.txt')
-      expect(file2).to.have.property('logicalName', 'texto prueba 1')
-    })
-
-    step('Searching a not existing file by path, must fail', async function () {
-      await fss.populated2.getFile('missgno.txt')
-        .then(result => assert.fail('getFile must fail when try to get a not existing file.'),
-          err => {
-            expect(err).to.be.instanceof(FileStorage.FileNotFoundError)
-          })
     })
   })
 
