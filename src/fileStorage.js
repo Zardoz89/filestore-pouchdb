@@ -66,6 +66,31 @@ class File {
     return pathElements.join(PATH_SEPARATOR)
   }
 }
+
+class FileStoreError extends Error {
+  constructor(...params) {
+    super(...params)
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, FileStoreError)
+    }
+
+    this.name = this.constructor.name
+  }
+}
+
+class FileNotFoundError extends FileStoreError {
+  constructor(...params) {
+    super(...params)
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, FileNotFoundError)
+    }
+
+    this.name = this.constructor.name
+  }
+}
+
 /**
  * Adapter function that generated a valid File class from a DbDocument class
  * @param {DbDocument} dbDocument
@@ -150,36 +175,34 @@ class FileStorage {
    * Return a file using his hash
    * @param {string} fileHash
    */
-  getFileFromHash(fileHash) {
-    return new Promise((resolve, reject) => {
-      this.db.get(DOCUMENT_ID_PREFIX + fileHash)
-        .then(doc => {
-          resolve(dbDocumentToFileAdapter(doc))
-        })
-        .catch(err => reject(err))
-    })
+  async getFileFromHash(fileHash) {
+    const doc = await this.db.get(DOCUMENT_ID_PREFIX + fileHash)
+      .catch(err => {
+        if (err.name === 'not_found') {
+          throw new FileNotFoundError(`File with hash ${fileHash} not found.`)
+        } else {
+          throw new FileStoreError(`Unknow error : ${err}`)
+        }
+      })
+    return dbDocumentToFileAdapter(doc)
   }
 
   /**
    * Return a file using his path
    * @param {string} path
    */
-  getFile(path) {
-    return new Promise((resolve, reject) => {
-      const pathElements = File.getPathElements(path)
-      this.db.find({
-        selector: {
-          pathElements: { $eq: pathElements }
-        }
-      })
-        .then(response => {
-          if (!response.docs || response.docs.length === 0) {
-            throw new Error(`File with path ${path} not found`)
-          }
-          resolve(dbDocumentToFileAdapter(response.docs[0]))
-        })
-        .catch(err => reject(err))
-    })
+  async getFile(path) {
+    const pathElements = File.getPathElements(path)
+    const response = await this.db.find({
+      selector: {
+        pathElements: { $eq: pathElements }
+      }
+    }).catch(err => { throw new FileStoreError(`Unknow error : ${err}`) })
+
+    if (!response.docs || response.docs.length === 0) {
+      throw new FileNotFoundError(`File with path ${path} not found.`)
+    }
+    return dbDocumentToFileAdapter(response.docs[0])
   }
 
   /**
@@ -254,6 +277,6 @@ async function initFileSystem(databaseName) {
   return new FileStorage(db)
 }
 
-export default { File, FileStorage, initFileSystem, PATH_SEPARATOR }
+export default { File, FileStorage, initFileSystem, PATH_SEPARATOR, FileStoreError, FileNotFoundError }
 
 // vim: set backupcopy=yes :

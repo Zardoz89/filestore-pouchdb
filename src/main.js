@@ -118,7 +118,7 @@ describe('FileStorage', function () {
     })
 
     xstep('When we add file with the same path and without overwrite enabled, it must fail', () => {
-      return fss.empty.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0x0', '', 'adios mundo'))
+      return fss.empty.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 0x0', '', 'adios mundo'))
         .then(result => assert.fail('addFile must fail when try to overwrite the file without the flag.'), err => {
           // TODO Return a proper error and not PouchDb error object
           console.trace(err)
@@ -214,57 +214,45 @@ describe('FileStorage', function () {
   })
 
   describe('#getFileFromHash()', function () {
-    step('Searching an existing file by hash, must return it', function () {
-      return fss.populated.getFileFromHash('texto prueba 0')
-        .then(file => {
-          expect(file).to.not.be.null
-          expect(file).to.have.property('path', 'prueba0.txt')
-          expect(file).to.have.property('logicalName', 'texto prueba 0')
+    step('Searching an existing file by hash, must return it', async function () {
+      const file1 = await fss.populated.getFileFromHash('texto prueba 0')
+      expect(file1).to.not.be.null
+      expect(file1).to.have.property('path', 'prueba0.txt')
+      expect(file1).to.have.property('logicalName', 'texto prueba 0')
 
-          return fss.populated.getFileFromHash('texto prueba 1')
-        })
-        .then(file => {
-          expect(file).to.not.be.null
-          expect(file).to.have.property('path', 'dir1/subdir2/prueba1.txt')
-          expect(file).to.have.property('logicalName', 'texto prueba 1')
-        })
+      const file2 = await fss.populated.getFileFromHash('texto prueba 1')
+      expect(file2).to.not.be.null
+      expect(file2).to.have.property('path', 'dir1/subdir2/prueba1.txt')
+      expect(file2).to.have.property('logicalName', 'texto prueba 1')
     })
 
-    step('Searching a not existing file by hash, must fail', function () {
-      return fss.populated.getFileFromHash('texto prueba missgno')
+    step('Searching a not existing file by hash, must fail', async function () {
+      await fss.populated.getFileFromHash('texto prueba missgno')
         .then(result => assert.fail('getFileFromHash must fail when try to get a not existing file.'),
           err => {
-            // TODO Return a proper error and not PouchDb error object
-            console.trace(err)
-            expect(err).to.have.property('name', 'not_found')
+            expect(err).to.be.instanceof(FileStorage.FileNotFoundError)
           })
     })
   })
 
   describe('#getFile()', function () {
-    step('Searching an existing file by path, must return it', function () {
-      return fss.populated.getFile('prueba0.txt')
-        .then(file => {
-          expect(file).to.not.be.null
-          expect(file).to.have.property('path', 'prueba0.txt')
-          expect(file).to.have.property('logicalName', 'texto prueba 0')
+    step('Searching an existing file by path, must return it', async function () {
+      const file1 = await fss.populated.getFile('prueba0.txt')
+      expect(file1).to.not.be.null
+      expect(file1).to.have.property('path', 'prueba0.txt')
+      expect(file1).to.have.property('logicalName', 'texto prueba 0')
 
-          return fss.populated.getFile('dir1/subdir2/prueba1.txt')
-        })
-        .then(file => {
-          expect(file).to.not.be.null
-          expect(file).to.have.property('path', 'dir1/subdir2/prueba1.txt')
-          expect(file).to.have.property('logicalName', 'texto prueba 1')
-        })
+      const file2 = await fss.populated.getFile('dir1/subdir2/prueba1.txt')
+      expect(file2).to.not.be.null
+      expect(file2).to.have.property('path', 'dir1/subdir2/prueba1.txt')
+      expect(file2).to.have.property('logicalName', 'texto prueba 1')
     })
 
-    step('Searching a not existing file by path, must fail', function () {
-      return fss.populated.getFile('missgno.txt')
+    step('Searching a not existing file by path, must fail', async function () {
+      await fss.populated.getFile('missgno.txt')
         .then(result => assert.fail('getFile must fail when try to get a not existing file.'),
           err => {
-            // TODO Return a proper error and not PouchDb error object
-            console.trace(err)
-            // expect(err).to.have.property('name', 'not_found')
+            expect(err).to.be.instanceof(FileStorage.FileNotFoundError)
           })
     })
   })
