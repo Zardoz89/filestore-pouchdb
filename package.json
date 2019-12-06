@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "private": true,
+  "type": "module",
+  "main": "./src/fileStorage.js",
+  "module": "./src/fileStorage.js",
   "scripts": {
     "clean": "rm ./dist/*",
     "dev": "parcel index.html",
-    "build": "parcel build ./src/main.js",
     "lint": "eslint ./src/ --ext .js",
     "fix-lint": "eslint ./src/ --ext .js --fix",
     "generate-docs": "jsdoc -r  . -d docs -c jsdoc.conf README.md"
