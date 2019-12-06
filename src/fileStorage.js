@@ -4,6 +4,8 @@
  * Handles a simple file storage over PouchDB. Mimics some functionality of a virtual filesystem like directories and
  * file hierarchy, but avoids to try to be a full virtual filesystem.
  */
+import { FileStoreError, FileNotFoundError, FileWithSameHashExists, FileWithSamePath } from './errors.js'
+
 import PouchDb from 'pouchdb'
 import FindPlugin from 'pouchdb-find'
 
@@ -36,7 +38,7 @@ class DbDocument {
 }
 
 /** File class that represents a file stored on it */
-class File {
+export class File {
   /**
    * Constructor
    * @param {string} path
@@ -64,69 +66,6 @@ class File {
   /** Builds a valid path from his path elements */
   static getPathFromPathElements(pathElements) {
     return pathElements.join(PATH_SEPARATOR)
-  }
-}
-
-/**
- * Base clase for all FileStorage errors
- *
- * @property pouchDbError PouchDb error if there was an error throw by PouchDb
- */
-class FileStoreError extends Error {
-  constructor(pouchDbError = {}, ...params) {
-    super(...params)
-    // Maintains proper stack trace for where our error was thrown (only available on V8)
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, FileStoreError)
-    }
-
-    this.name = this.constructor.name
-    this.pouchDbError = pouchDbError
-  }
-}
-
-/**
- * File not found error
- */
-class FileNotFoundError extends FileStoreError {
-  constructor(pouchDbError = {}, ...params) {
-    super(pouchDbError, ...params)
-
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, FileNotFoundError)
-    }
-
-    this.name = this.constructor.name
-  }
-}
-
-/**
- * Duplicate file error
- */
-class FileWithSameHashExists extends FileStoreError {
-  constructor(pouchDbError = {}, ...params) {
-    super(pouchDbError, ...params)
-
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, FileWithSameHashExists)
-    }
-
-    this.name = this.constructor.name
-  }
-}
-
-/**
- * File with the same path
- */
-class FileWithSamePath extends FileStoreError {
-  constructor(pouchDbError = {}, ...params) {
-    super(pouchDbError, ...params)
-
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, FileWithSamePath)
-    }
-
-    this.name = this.constructor.name
   }
 }
 
@@ -363,6 +302,15 @@ async function initFileSystem(databaseName) {
   return new FileStorage(db)
 }
 
-export default { File, FileStorage, initFileSystem, PATH_SEPARATOR, FileStoreError, FileNotFoundError, FileWithSameHashExists, FileWithSamePath }
+export default {
+  File,
+  FileStorage,
+  initFileSystem,
+  PATH_SEPARATOR,
+  FileStoreError,
+  FileNotFoundError,
+  FileWithSameHashExists,
+  FileWithSamePath
+}
 
 // vim: set backupcopy=yes :
