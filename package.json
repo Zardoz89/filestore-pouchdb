@@ -11,7 +11,7 @@
     "dev": "parcel index.html",
     "lint": "eslint ./src/ --ext .js",
     "fix-lint": "eslint ./src/ --ext .js --fix",
-    "generate-docs": "jsdoc -r  . -d docs -c jsdoc.conf README.md"
+    "generate-docs": "jsdoc -r  ./src/ -d docs -c jsdoc.conf README.md"
   },
   "author": "",
   "license": "ISC",

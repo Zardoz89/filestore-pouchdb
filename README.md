@@ -1,19 +1,31 @@
 # Simple file storage over PouchDb
 
 
-Handles a simple file storage over PouchDB. Mimics some functionality of a virtual filesystem like directories and
-file hierarchy, but avoids to try to be a full virtual filesystem.
+Handles a simple file storage over PouchDB. Mimics some functionality of a
+virtual file system like directories and file hierarchy, but avoids to try to 
+be a full virtual file system.
+
+## Objectives
+
+Store files on the browser, with the optional capacity of synchronize with a
+remote CouchDb database. The retrieving of the files must be fast and each file
+it's identified by his path. 
+
+## Features
+
+* FileStorage it's implemented over a PouchDb and can return the underlying
+    database. So could be configured to synchronize/reply to another databases.
+* Return a File by path
+* Creation and deletion of directories. Directory extends of File without any
+    content
+* Listing all the files, showing the whole tree hierarchy.
+* Listing all the files of a directory, showing the whole tree hierarchy
+* Methods to delete files, directories and even clean all the whole storage.
 
 ## TODOs
-* File class should have a hash attribute or getter that calcs hash if isn't calculated previsuly
-* Attach file data and generate hash from it. Adding a file should return the file hash
-* Overwrite a file
-* Creating a file on a not existent path should throw an error or create a directory silenty (config this by options)
-* Delete directory
-* Brother methos of getFile and getFileFromHash that only returns if the file exists
-* TESTS!
+* Attach file data
+* Delete directory (half working)
+* Brother method of getFile that only returns if the file exists
+* Moar TESTS!
 
-### Optional TODOs
-* Directory subclass of File that is returned when getFile or getFileFromHash returns a directory file. MkDir must use it
-* List a directory content
 
