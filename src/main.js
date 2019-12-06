@@ -149,6 +149,21 @@ describe('FileStorage', function () {
     })
   })
 
+  describe('#delete()', function () {
+    xstep('Deleting an existing file, must return true', async function () {
+      await expect(fss.populated.delete('dir1/subdir2/prueba1.txt'))
+        .to.eventually.equal(true)
+
+      await expect(fss.property.getFile('dir1/subdir2/prueba1.txt'))
+        .to.be.rejectedWith(FileStorage.FileNotFoundError)
+    })
+
+    xstep('Deleting an non existing file, must return false', async function () {
+      await expect(fss.populated.delete('missigno/subdir2/prueba1.txt'))
+        .to.eventually.equal(false)
+    })
+  })
+
   describe('#mkDir()', function () {
     after(async function () {
       await fss.empty.format()
