@@ -38,7 +38,7 @@ class DbDocument {
 }
 
 /** File class that represents a file stored on it */
-export class File {
+class File {
   /**
    * Constructor
    * @param {string} path
@@ -66,6 +66,29 @@ export class File {
   /** Builds a valid path from his path elements */
   static getPathFromPathElements(pathElements) {
     return pathElements.join(PATH_SEPARATOR)
+  }
+}
+
+/**
+ * Class that represents a Directory
+ */
+class Directory extends File {
+  /**
+   * Constructor
+   * @param {string} path
+   * @param {array} logicalName
+   * @param {string} mimeType
+   * @param blob
+   */
+  constructor(path) {
+    const nameStartPos = path.lastIndexOf(PATH_SEPARATOR)
+    let name = ''
+    if (nameStartPos === -1) {
+      name = path
+    } else {
+      name = path.substring(nameStartPos)
+    }
+    super(path, name, null, null)
   }
 }
 
@@ -173,16 +196,9 @@ class FileStorage {
    * @param {object} [options - Options
    * @param {object} [options.parent] - Makes father directories. If father directories exists, don't fail
    */
-  mkDir(path, options) {
-    // const { parent = false } = options
-
-    const pathElements = File.getPathElements(path)
-
-    const fileName = pathElements[pathElements.length - 1]
-    const id = fileName
-    const document = new DbDocument(DOCUMENT_ID_PREFIX + id, pathElements, fileName, null, null)
-
-    return this.db.put(document)
+  mkDir(path, options = { parents: false }) {
+    const directory = new Directory(path, name)
+    return this.addFile(directory)
   }
 
   /**
