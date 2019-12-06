@@ -116,6 +116,21 @@ class FileWithSameHashExists extends FileStoreError {
 }
 
 /**
+ * File with the same path
+ */
+class FileWithSamePath extends FileStoreError {
+  constructor(pouchDbError = {}, ...params) {
+    super(pouchDbError, ...params)
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, FileWithSamePath)
+    }
+
+    this.name = this.constructor.name
+  }
+}
+
+/**
  * Adapter function that generated a valid File class from a DbDocument class
  * @param {DbDocument} dbDocument
  */
@@ -159,22 +174,51 @@ class FileStorage {
     const hash = file.logicalName // TODO hash from blob
     const id = DOCUMENT_ID_PREFIX + hash
 
+    const document = new DbDocument(id, pathElements, file.logicalName, '', file.blob)
+
     const originalDoc = await this.db.get(id)
       .catch((err) => {
         if (err.name !== 'not_found') {
           throw new FileStoreError(err, `Unknow error : ${err}`)
         }
       })
-    if (originalDoc !== undefined && !options.overwrite) {
-      throw new FileWithSameHashExists(`File with the same content exists. Use options.overwrite = true to replace it. Hash: ${hash}`)
-    } else {
-      // TODO overwrite
-      console.log('Not implemented yet')
+    if (originalDoc !== undefined) {
+      if (!options.overwrite) {
+        throw new FileWithSameHashExists(`File with the same content exists. Use options.overwrite = true to replace it. Hash: ${hash}`)
+      } else {
+        document._rev = originalDoc._rev
+      }
     }
 
-    // TODO Check if a file with the same path exists and throw error if overwrite is false
+    // Check if a file with the same path exists and throw error if overwrite is false and it isn't originalDoc
+    const documentsWithSamePath = await this.db.find({
+      selector: {
+        pathElements: { $eq: pathElements }
+      },
+      fields: ['_id']
+    }).catch(err => { throw new FileStoreError(err, `Unknow error : ${err}`) })
 
-    const document = new DbDocument(id, pathElements, file.logicalName, '', file.blob)
+    if (documentsWithSamePath.docs.length > 0) {
+      // We delete the docs with the same path
+      if (options.overwrite) {
+        console.log(document)
+        console.log('docs1', documentsWithSamePath.docs)
+        const docs = documentsWithSamePath.docs.map(doc => {
+          return { _id: doc._id, _rev: doc._rev, _deleted: true }
+        })
+          .filter(doc => doc._id !== document._id)
+        console.log('docs2', docs)
+        await this.db.bulkDocs(docs)
+          .catch((err) => {
+            if (err.name !== 'not_found') {
+              throw new FileStoreError(err, `Unknow error : ${err}`)
+            }
+          })
+      } else {
+        throw new FileWithSamePath(`File with the same path exists. Use options.overwrite = true to replace it. Path: ${file.path}`)
+      }
+    }
+
     await this.db.put(document)
       .catch((err) => {
         throw new FileStoreError(err, `Unknow error : ${err}`)
@@ -319,6 +363,6 @@ async function initFileSystem(databaseName) {
   return new FileStorage(db)
 }
 
-export default { File, FileStorage, initFileSystem, PATH_SEPARATOR, FileStoreError, FileNotFoundError, FileWithSameHashExists }
+export default { File, FileStorage, initFileSystem, PATH_SEPARATOR, FileStoreError, FileNotFoundError, FileWithSameHashExists, FileWithSamePath }
 
 // vim: set backupcopy=yes :

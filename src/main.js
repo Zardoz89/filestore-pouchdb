@@ -8,6 +8,7 @@ mocha.setup('bdd')
 
 let fss = {
   populated: null,
+  populated2: null,
   empty: null
 }
 
@@ -36,6 +37,15 @@ before(async function () {
   await fss.populated.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 1', '', 'hola mundo2'))
   await fss.populated.addFile(new FileStorage.File('dir1/subdir2/prueba2.txt', 'texto prueba 2', '', 'hola mundo3'))
   await fss.populated.addFile(new FileStorage.File('dir1/subdir1/prueba3.txt', 'texto prueba 3', '', 'hola mundo4'))
+
+  await fss.populated2.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', '', 'hola mundo'))
+  await fss.populated2.mkDir('dir1')
+  await fss.populated2.mkDir('dir2')
+  await fss.populated2.mkDir('dir1/subdir1')
+  await fss.populated2.mkDir('dir1/subdir2')
+  await fss.populated2.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 1', '', 'hola mundo2'))
+  await fss.populated2.addFile(new FileStorage.File('dir1/subdir2/prueba2.txt', 'texto prueba 2', '', 'hola mundo3'))
+  await fss.populated2.addFile(new FileStorage.File('dir1/subdir1/prueba3.txt', 'texto prueba 3', '', 'hola mundo4'))
 })
 
 after(async function () {
@@ -57,7 +67,6 @@ describe('FileStorage', function () {
       if (fs !== null) {
         await new Promise((resolve) => {
           setTimeout(() => {
-            console.log(fs)
             return resolve(fs.unwrap().destroy())
           }, 250)
         })
@@ -75,7 +84,6 @@ describe('FileStorage', function () {
 
     step('Return a class instance of FileStorage', async () => {
       fs = await FileStorage.initFileSystem()
-      console.trace(fs)
       expect(fs).to.not.be.null
       expect(fs).to.have.property('format').that.is.a('function')
       expect(fs).to.have.property('unwrap').that.is.a('function')
@@ -96,16 +104,13 @@ describe('FileStorage', function () {
       }).to.not.throw()
     })
 
-    step('When we add a file to a empty file storage, we should can retrive it', () => {
-      return fss.empty.addFile(new FileStorage.File('prueba1.txt', 'texto prueba 1', '', 'hola mundo'))
-        .then(result => {
-          return fss.empty.getFile('prueba1.txt')
-        })
-        .then(file => {
-          expect(file).to.not.be.null
-          expect(file).to.have.property('path', 'prueba1.txt')
-          expect(file).to.have.property('logicalName', 'texto prueba 1')
-        })
+    step('When we add a file to a empty file storage, we must can retrive it', async function () {
+      const hash = await fss.empty.addFile(new FileStorage.File('prueba1.txt', 'texto prueba 1', '', 'hola mundo'))
+      const file = await fss.empty.getFileFromHash(hash)
+
+      expect(file).to.not.be.null
+      expect(file).to.have.property('path', 'prueba1.txt')
+      expect(file).to.have.property('logicalName', 'texto prueba 1')
     })
 
     step('When we add file with the same hash and without overwrite enabled, it must fail', async function () {
@@ -116,27 +121,31 @@ describe('FileStorage', function () {
           })
     })
 
-    xstep('When we add file with the same path and without overwrite enabled, it must fail', () => {
-      return fss.empty.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 0x0', '', 'adios mundo'))
+    step('When we add file with the same path and without overwrite enabled, it must fail', async function () {
+      await fss.populated.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 0x0', '', 'adios mundo'))
         .then(result => assert.fail('addFile must fail when try to overwrite the file without the flag.'),
           err => {
-            // TODO Return a proper error and not PouchDb error object
-            console.trace(err)
-            expect(err).to.have.property('name', 'conflict')
+            expect(err).to.be.instanceof(FileStorage.FileWithSamePath)
           })
     })
 
-    xstep('When we add file with overwrite, it must replace the old file with the same path', () => {
-      return fss.empty.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0 bis', '', 'adios mundo'),
+    step('When we add file with overwrite, it must replace the old file with the hash', async function () {
+      const hash = await fss.empty.addFile(new FileStorage.File('prueba0bis.txt', 'texto prueba 0', '', 'adios mundo'),
         { overwrite: true })
-        .then(result => {
-          return fss.empty.getFile('prueba0.txt')
-        })
-        .then(file => {
-          expect(file).to.not.be.null
-          expect(file).to.have.property('path', 'prueba0.txt')
-          expect(file).to.have.property('logicalName', 'texto prueba 0 bis')
-        })
+      const file = await fss.empty.getFileFromHash(hash)
+      expect(file).to.not.be.null
+      expect(file).to.have.property('path', 'prueba0bis.txt')
+      expect(file).to.have.property('logicalName', 'texto prueba 0')
+    })
+
+    step('When we add file with overwrite, it must replace the old file with the same path', async function () {
+      const hash = await fss.populated.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 0', '', 'adios mundo'),
+        { overwrite: true })
+      const file = await fss.populated.getFileFromHash(hash)
+      expect(file).to.not.be.null
+      expect(file).to.have.property('path', 'dir1/subdir2/prueba1.txt')
+      expect(file).to.have.property('logicalName', 'texto prueba 0')
+      expect(file).to.have.property('blob', 'adios mundo')
     })
   })
 
@@ -215,19 +224,19 @@ describe('FileStorage', function () {
 
   describe('#getFileFromHash()', function () {
     step('Searching an existing file by hash, must return it', async function () {
-      const file1 = await fss.populated.getFileFromHash('texto prueba 0')
+      const file1 = await fss.populated2.getFileFromHash('texto prueba 0')
       expect(file1).to.not.be.null
       expect(file1).to.have.property('path', 'prueba0.txt')
       expect(file1).to.have.property('logicalName', 'texto prueba 0')
 
-      const file2 = await fss.populated.getFileFromHash('texto prueba 1')
+      const file2 = await fss.populated2.getFileFromHash('texto prueba 1')
       expect(file2).to.not.be.null
       expect(file2).to.have.property('path', 'dir1/subdir2/prueba1.txt')
       expect(file2).to.have.property('logicalName', 'texto prueba 1')
     })
 
     step('Searching a not existing file by hash, must fail', async function () {
-      await fss.populated.getFileFromHash('texto prueba missgno')
+      await fss.populated2.getFileFromHash('texto prueba missgno')
         .then(result => assert.fail('getFileFromHash must fail when try to get a not existing file.'),
           err => {
             expect(err).to.be.instanceof(FileStorage.FileNotFoundError)
@@ -237,19 +246,19 @@ describe('FileStorage', function () {
 
   describe('#getFile()', function () {
     step('Searching an existing file by path, must return it', async function () {
-      const file1 = await fss.populated.getFile('prueba0.txt')
+      const file1 = await fss.populated2.getFile('prueba0.txt')
       expect(file1).to.not.be.null
       expect(file1).to.have.property('path', 'prueba0.txt')
       expect(file1).to.have.property('logicalName', 'texto prueba 0')
 
-      const file2 = await fss.populated.getFile('dir1/subdir2/prueba1.txt')
+      const file2 = await fss.populated2.getFile('dir1/subdir2/prueba1.txt')
       expect(file2).to.not.be.null
       expect(file2).to.have.property('path', 'dir1/subdir2/prueba1.txt')
       expect(file2).to.have.property('logicalName', 'texto prueba 1')
     })
 
     step('Searching a not existing file by path, must fail', async function () {
-      await fss.populated.getFile('missgno.txt')
+      await fss.populated2.getFile('missgno.txt')
         .then(result => assert.fail('getFile must fail when try to get a not existing file.'),
           err => {
             expect(err).to.be.instanceof(FileStorage.FileNotFoundError)
@@ -261,12 +270,12 @@ describe('FileStorage', function () {
     this.slow(500)
 
     it('Must return all files stored, showing the hierarchy', function () {
-      return fss.populated.listAllFiles()
+      return fss.populated2.listAllFiles()
         .then(files => {
           expect(files).to.not.be.null
           expect(files).to.have.lengthOf(8)
           const paths = files.map(file => file.path)
-          console.log(paths)
+          console.log('paths', paths)
           expect(paths).to.have.ordered.members([
             'dir1',
             'dir1/subdir1',
