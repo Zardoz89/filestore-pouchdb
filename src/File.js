@@ -13,7 +13,7 @@ export class File {
    * @param {string} path - Path of the file
    * @param {array} label - User label of the file. If is ommited would be the last part of the path
    * @param {string} mimeType
-   * @param blob
+   * @param {blob|string} blob - A blob or base64 string with the data
    */
   constructor(path, label, mimeType, blob) {
     this.path = normalizePath(path)

@@ -23,8 +23,15 @@ function dbDocumentToFileAdapter(dbDocument) {
   if (dbDocument.isDirectory) {
     return new Directory(File.getPathFromPathElements(dbDocument.pathElements))
   }
-  return new File(File.getPathFromPathElements(dbDocument.pathElements), dbDocument.label, dbDocument.mimeType,
-    dbDocument.blob)
+  let mimeType = null
+  let blob = null
+  if (dbDocument._attachments && dbDocument._attachments.self) {
+    mimeType = dbDocument._attachments.self.content_type
+    if (!dbDocument._attachments.self.stub) {
+      blob = dbDocument._attachments.self.data
+    }
+  }
+  return new File(File.getPathFromPathElements(dbDocument.pathElements), dbDocument.label, mimeType, blob)
 }
 
 /**
@@ -237,7 +244,7 @@ class FileStorage {
   async getFile(path) {
     path = normalizePath(path)
     const docId = DOCUMENT_ID_PREFIX + path
-    const doc = await this.db.get(docId)
+    const doc = await this.db.get(docId, {attachments: true})
       .catch(err => {
         if (err.name === 'not_found') {
           throw new FileNotFoundError(`File with path ${path} not found.`)
