@@ -208,23 +208,13 @@ class FileStorage {
       return false
     }
 
-    // Check if have childrens and implement the logic of options.recursive
-    const pathElements = File.getPathElements(path)
-    // TODO Use listAllFiles with onlyPaths and filter. this not ends to work fine
-    const allDocs = await this.db.find({
-      selector: {
-        pathElements: { $regex: pathElements }
-      }
-    })
-      .catch(err => {
-        throw unknowError(err)
-      })
-    console.debug('rmDir', path, allDocs)
-    if (allDocs.docs.length > 1 && !options.recursive) {
+    // Check if it have childrens and implement the logic of options.recursive
+    const childrens = await this.listAllFilesOnAPath(path, { onlyPaths: true })
+    console.debug('rmDir', path, childrens)
+    if (childrens.length > 0 && !options.recursive) {
       return false
     } else if (options.recursive) {
-      const childrens = allDocs.docs.slice(1)
-      await Promise.all(childrens.map(doc => { this.rmDir(File.getPathFromPathElements(doc.path), options) }))
+      await Promise.all(childrens.map(children => { this.rmDir(children, options) }))
     }
 
     return this.db.remove(doc._id, doc._rev)
@@ -280,21 +270,23 @@ class FileStorage {
    * @return {array} A sorted array of File or a sorted array of strings with the paths if onlyPaths is true
    */
   async listAllFilesOnAPath(path, options = { onlyPaths: false }) {
-    // TODO Use listAllFiles with onlyPaths and filter. this not ends to work fine
     path = normalizePath(path)
-    const pathElements = File.getPathElements(path)
-    const allDocs = await this.db.find({
-      selector: {
-        pathElements: { $regex: pathElements }
-      }
-    })
-      .catch(err => {
-        throw unknowError(err)
-      })
+    const level = (path.match(new RegExp(PATH_SEPARATOR, 'g')) || []).length
+    const allFiles = await this.listAllFiles(options)
     if (options.onlyPaths) {
-      return allDocs.docs.map(doc => dbDocumentToFileAdapter(doc).path)
+      let files = allFiles.filter(file => file.startsWith(path))
+      files = files.filter(file => {
+        const fileLevel = (file.match(new RegExp(PATH_SEPARATOR, 'g')) || []).length
+        return (level + 1) === fileLevel
+      })
+      return files
     } else {
-      return allDocs.docs.map(doc => dbDocumentToFileAdapter(doc))
+      let files = allFiles.filter(file => file.path.startsWith(path))
+      files = files.filter(file => {
+        const pathLevel = (file.path.match(new RegExp(PATH_SEPARATOR, 'g')) || []).length
+        return (level + 1) === pathLevel
+      })
+      return files
     }
   }
 

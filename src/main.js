@@ -214,9 +214,6 @@ describe('FileStorage', function () {
 
   describe('#rmDir()', function () {
     step("Deleting an empty directory doesn't fail", async function () {
-      const paths = await fss.populated.listAllFiles({ onlyPaths: true })
-      console.log('paths rmDir', paths)
-
       const deleted = await fss.populated.rmDir('dir2')
       expect(deleted).to.be.true
       await fss.populated.getFile('dir2')
@@ -231,18 +228,26 @@ describe('FileStorage', function () {
       expect(deleted).to.be.false
     })
 
-    xstep('Deleting an not empty directory fails', function () {
-      return fss.empty.rmDir('dir1')
-        .then(() => assert.fail('rmDir must fail when try to delete a not empty directory.'),
-          err => {
-            // TODO Return a proper error and not PouchDb error object
-            console.trace(err)
-            expect(err).to.have.property('name', 'conflict')
-          })
+    step('Deleting an not empty directory fails', async function () {
+      const deleted = await fss.populated.rmDir('dir1/subdir1')
+      expect(deleted).to.be.false
     })
 
-    xstep('Deleting a whole directory structure with recursive', function () {
-      return fss.empty.rmDir('dir1', { recursive: true })
+    step('Deleting a whole directory structure with recursive', async function () {
+      const paths = await fss.populated.listAllFiles({ onlyPaths: true })
+      console.log('#rmdir 2', paths)
+      const deleted = await fss.populated.rmDir('dir1/subdir1', { recursive: true})
+      expect(deleted).to.be.true
+      /*
+      await Promile.all([
+        fss.populated.getFile('dir1/subdir1'),
+        fss.populated.getFile('dir1/subdir1/prueba3.txt'),
+    ])
+        .then(() => assert.fail('getFile must fail when try to get a not existing file.'),
+          err => {
+            expect(err).to.be.instanceof(FileStorage.FileNotFoundError)
+          })
+          */
     })
   })
 
@@ -295,26 +300,18 @@ describe('FileStorage', function () {
     it('Must return all files stored, showing the hierarchy', async function () {
       const filesDir1 = await fss.populated2.listAllFilesOnAPath('dir1')
       expect(filesDir1).to.not.be.null
-      expect(filesDir1).to.have.lengthOf(7)
+      expect(filesDir1).to.have.lengthOf(2)
       const paths1 = filesDir1.map(file => file.path)
-      console.log('paths', paths1)
       expect(paths1).to.have.ordered.members([
-        'dir1',
         'dir1/subdir1',
-        'dir1/subdir1/prueba3.txt',
-        'dir1/subdir1/prueba4 con espacios ñ €.txt',
         'dir1/subdir2',
-        'dir1/subdir2/prueba1.txt',
-        'dir1/subdir2/prueba2.txt'
       ])
 
       const filesDir2 = await fss.populated2.listAllFilesOnAPath('dir1/subdir1')
       expect(filesDir2).to.not.be.null
-      expect(filesDir2).to.have.lengthOf(3)
+      expect(filesDir2).to.have.lengthOf(2)
       const paths2 = filesDir2.map(file => file.path)
-      console.log('paths', paths2)
       expect(paths2).to.have.ordered.members([
-        'dir1/subdir1',
         'dir1/subdir1/prueba3.txt',
         'dir1/subdir1/prueba4 con espacios ñ €.txt'
       ])

@@ -14,7 +14,7 @@
         "asyncArrow": "always"
     }],
     "no-new": "off",
-
+    "comma-dangle": "off",
     "no-unused-expressions": ["off"],
     "no-extra-parens": ["off"]
   }
