@@ -1,6 +1,7 @@
 /**
  * File and Directory classes
  */
+/* eslint-env browser, es2017 */
 import { PATH_SEPARATOR } from './constants.js'
 import { normalizeString, normalizePath } from './utils.js'
 
@@ -12,10 +13,9 @@ export class File {
    * Constructor
    * @param {string} path - Path of the file
    * @param {array} label - User label of the file. If is ommited would be the last part of the path
-   * @param {string} mimeType
-   * @param {blob|string} blob - A blob or base64 string with the data
+   * @param {blob} blob - A blob to be stored
    */
-  constructor(path, label, mimeType, blob) {
+  constructor(path, label, blob) {
     this.path = normalizePath(path)
     if (typeof label === 'undefined' || label === null) {
       const pathElements = File.getPathElements(this.path)
@@ -23,7 +23,6 @@ export class File {
     } else {
       this.label = normalizeString(label)
     }
-    this.mimeType = mimeType
     this.blob = blob
   }
 

@@ -1,17 +1,17 @@
 /**
  * Document to be stored in the database
  */
-export class DbDocument {
+/* eslint-env browser, es2017 */
+export default class DbDocument {
   /**
    * Constructor
    * @param {string} id
    * @param {array} pathElements
    * @param {string} label
    * @param {boolean} isDirectory - Flag that marks the document as a directory
-   * @param {string} mimeType - mime type of the date to be stored
-   * @param {blob|string} blob - A blob or base64 string to be stored as attachment
+   * @param {blob|string} blob - A blob to be stored as attachment
    */
-  constructor(_id, pathElements, label, isDirectory, mimeType, blob) {
+  constructor(_id, pathElements, label, isDirectory, blob) {
     this._id = _id
     this.pathElements = pathElements
     this.label = label
@@ -19,7 +19,7 @@ export class DbDocument {
     if (blob != null) {
       this._attachments = {
         self: {
-          content_type: mimeType,
+          content_type: blob.type,
           data: blob
         }
       }

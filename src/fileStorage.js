@@ -4,6 +4,7 @@
  * Handles a simple file storage over PouchDB. Mimics some functionality of a virtual filesystem like directories and
  * file hierarchy, but avoids to try to be a full virtual filesystem.
  */
+/* eslint-env browser, es2017 */
 import { DEFAULT_DATABASE_NAME, PATH_SEPARATOR, DOCUMENT_ID_PREFIX } from './constants.js'
 import { normalizePath, getFatherDirectory } from './utils.js'
 import { File, Directory } from './File.js'
@@ -11,7 +12,7 @@ import { FileStoreError, unknowError } from './FileStoreError'
 import FileNotFoundError from './FileNotFoundError'
 import FileWithSamePath from './FileWithSamePath'
 import InvalidPathError from './InvalidPathError'
-import { DbDocument } from './DbDocument.js'
+import DbDocument from './DbDocument.js'
 
 import PouchDb from 'pouchdb'
 import FindPlugin from 'pouchdb-find'
@@ -26,15 +27,13 @@ function dbDocumentToFileAdapter(dbDocument) {
   if (dbDocument.isDirectory) {
     return new Directory(File.getPathFromPathElements(dbDocument.pathElements))
   }
-  let mimeType = null
   let blob = null
   if (dbDocument._attachments && dbDocument._attachments.self) {
-    mimeType = dbDocument._attachments.self.content_type
     if (!dbDocument._attachments.self.stub) {
       blob = dbDocument._attachments.self.data
     }
   }
-  return new File(File.getPathFromPathElements(dbDocument.pathElements), dbDocument.label, mimeType, blob)
+  return new File(File.getPathFromPathElements(dbDocument.pathElements), dbDocument.label, blob)
 }
 
 /**
@@ -127,7 +126,7 @@ class FileStorage {
     // Verify that father directory exists
     await verifyFatherDirectoryExists(this.db, pathElements, true)
 
-    const document = new DbDocument(documentId, pathElements, file.label, file instanceof Directory, file.mimeType, file.blob)
+    const document = new DbDocument(documentId, pathElements, file.label, file instanceof Directory, file.blob)
 
     // Check file duplication
     const originalDoc = await this.db.get(documentId)
@@ -143,28 +142,6 @@ class FileStorage {
         document._rev = originalDoc._rev
       }
     }
-
-    // Check if a file with the same path exists and throw error if overwrite is false
-    // TODO Redundant ?
-    /*  const documentsWithSamePath = await searchDocumentsByPath(this.db, pathElements)
-      if (documentsWithSamePath.length > 0) {
-        // We delete the docs with the same path
-        if (options.overwrite) {
-          const docs = documentsWithSamePath.map(doc => {
-            return { _id: doc._id, _rev: doc._rev, _deleted: true }
-          })
-            .filter(doc => doc._id !== document._id)
-
-          await this.db.bulkDocs(docs)
-            .catch((err) => {
-              if (err.name !== 'not_found') {
-                throw unknowError(err)
-              }
-            })
-        } else {
-          throw new FileWithSamePath(`File with the same path exists. Use options.overwrite = true to replace it. Path: ${file.path}`)
-        }
-      } */
 
     await this.db.put(document)
       .catch((err) => {
@@ -236,7 +213,7 @@ class FileStorage {
   async getFile(path) {
     path = normalizePath(path)
     const docId = DOCUMENT_ID_PREFIX + path
-    const doc = await this.db.get(docId, {attachments: true})
+    const doc = await this.db.get(docId, {attachments: true, binary: true})
       .catch(err => {
         if (err.name === 'not_found') {
           throw new FileNotFoundError(`File with path ${path} not found.`)
@@ -254,7 +231,7 @@ class FileStorage {
    * @return {array} A sorted array of File or a sorted array of strings with the paths if onlyPaths is true
    */
   async listAllFiles(options = { onlyPaths: false }) {
-    const allDocs = await this.db.query('path', { include_docs: true, attachments: !options.onlyPaths })
+    const allDocs = await this.db.query('path', { include_docs: true, attachments: !options.onlyPaths, binary: !options.onlyPaths })
       .catch(err => {
         throw unknowError(err)
       })

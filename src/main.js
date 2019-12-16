@@ -1,3 +1,4 @@
+/* eslint-env browser, mocha, es2017 */
 import FileStorage from './fileStorage.js'
 
 import { expect, assert, use } from 'chai'
@@ -36,24 +37,24 @@ before(async function () {
   await fss.populated.format()
   await fss.populated2.format()
 
-  await fss.populated.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', 'text/plain', window.btoa('hola mundo')))
+  await fss.populated.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', new Blob(['hola mundo'], { type: 'text/plain' })))
   await fss.populated.mkDir('dir1')
   await fss.populated.mkDir('dir2')
   await fss.populated.mkDir('dir1/subdir1')
   await fss.populated.mkDir('dir1/subdir2')
-  await fss.populated.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 1', 'text/plain', window.btoa('hola mundo2')))
-  await fss.populated.addFile(new FileStorage.File('dir1/subdir2/prueba2.txt', 'texto prueba 2', 'text/plain', window.btoa('hola mundo3')))
-  await fss.populated.addFile(new FileStorage.File('dir1/subdir1/prueba3.txt', 'texto prueba 3', 'text/plain', window.btoa('hola mundo4')))
+  await fss.populated.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 1', new Blob(['hola mundo2'], { type: 'text/plain' })))
+  await fss.populated.addFile(new FileStorage.File('dir1/subdir2/prueba2.txt', 'texto prueba 2', new Blob(['hola mundo3'], { type: 'text/plain' })))
+  await fss.populated.addFile(new FileStorage.File('dir1/subdir1/prueba3.txt', 'texto prueba 3', new Blob(['hola mundo4'], { type: 'text/plain' })))
 
-  await fss.populated2.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', 'text/plain', window.btoa('hola mundo')))
+  await fss.populated2.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', new Blob(['hola mundo'], { type: 'text/plain' })))
   await fss.populated2.mkDir('dir1')
   await fss.populated2.mkDir('dir2')
   await fss.populated2.mkDir('dir1/subdir1')
   await fss.populated2.mkDir('dir1/subdir2')
-  await fss.populated2.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 1', 'text/plain', window.btoa('hola mundo2')))
-  await fss.populated2.addFile(new FileStorage.File('dir1/subdir2/prueba2.txt', 'texto prueba 2', 'text/plain', window.btoa('hola mundo3')))
-  await fss.populated2.addFile(new FileStorage.File('dir1/subdir1/prueba3.txt', 'texto prueba 3', 'text/plain', window.btoa('hola mundo4')))
-  await fss.populated2.addFile(new FileStorage.File('dir1/subdir1/prueba4 con espacios ñ €.txt', 'texto prueba 4', 'text/plain', window.btoa('unicode y eso')))
+  await fss.populated2.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 1', new Blob(['hola mundo2'], { type: 'text/plain' })))
+  await fss.populated2.addFile(new FileStorage.File('dir1/subdir2/prueba2.txt', 'texto prueba 2', new Blob(['hola mundo3'], { type: 'text/plain' })))
+  await fss.populated2.addFile(new FileStorage.File('dir1/subdir1/prueba3.txt', 'texto prueba 3', new Blob(['hola mundo4'], { type: 'text/plain' })))
+  await fss.populated2.addFile(new FileStorage.File('dir1/subdir1/prueba4 con espacios ñ €.txt', 'texto prueba 4', new Blob(['unicode y eso'], { type: 'text/plain' })))
 })
 
 describe('FileStorage', function () {
@@ -65,8 +66,6 @@ describe('FileStorage', function () {
       expect(fs).to.have.property('format').that.is.a('function')
       expect(fs).to.have.property('addFile').that.is.a('function')
       expect(fs).to.have.property('unwrap').that.is.a('function')
-
-      //await fs.unwrap().destroy()
     })
   })
 
@@ -79,24 +78,25 @@ describe('FileStorage', function () {
 
     step('When we add a file to a empty file storage, it should add the file object witchout throwing an exception', (done) => {
       expect(() => {
-        fss.empty.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', 'text/plain', window.btoa('hola mundo')))
+        fss.empty.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', new Blob(['hola mundo'], { type: 'text/plain' })))
           .then(() => {
             done()
           })
       }).to.not.throw()
     })
     step('When we add a file to a empty file storage, we must can retrive it', async function () {
-      const path = await fss.empty.addFile(new FileStorage.File('prueba1.txt', 'texto prueba 1', 'text/plain', window.btoa('hola mundo')))
+      const path = await fss.empty.addFile(new FileStorage.File('prueba1.txt', 'texto prueba 1', new Blob(['hola mundo'], { type: 'text/plain' })))
       const file = await fss.empty.getFile(path)
 
       expect(file).to.not.be.null
       expect(file).to.have.property('path', 'prueba1.txt')
       expect(file).to.have.property('label', 'texto prueba 1')
-      expect(file).to.have.property('blob', window.btoa('hola mundo'))
+      expect(file).to.have.property('blob')
+      expect(file.blob.text()).to.eventually.equal('hola mundo')
     })
 
     step('When we add file with the same path and without overwrite enabled, it must fail', async function () {
-      await fss.populated.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 0x0', 'text/plain', window.btoa('adios mundo')))
+      await fss.populated.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 0x0', new Blob(['adios mundo'], { type: 'text/plain' })))
         .then(() => assert.fail('addFile must fail when try to overwrite the file without the flag.'),
           err => {
             expect(err).to.be.instanceof(FileStorage.FileWithSamePath)
@@ -104,7 +104,7 @@ describe('FileStorage', function () {
     })
 
     step('When we add file with overwrite, it must replace the old file with the path', async function () {
-      const path = await fss.empty.addFile(new FileStorage.File('prueba0bis.txt', 'texto prueba 0', 'text/plain', window.btoa('adios mundo')),
+      const path = await fss.empty.addFile(new FileStorage.File('prueba0bis.txt', 'texto prueba 0', new Blob(['adios mundo'], { type: 'text/plain' })),
         { overwrite: true })
       const file = await fss.empty.getFile(path)
       expect(file).to.not.be.null
@@ -113,17 +113,18 @@ describe('FileStorage', function () {
     })
 
     step('When we add file with overwrite, it must replace the old file with the same path', async function () {
-      const path = await fss.populated.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 0', 'text/plain', window.btoa('adios mundo')),
+      const path = await fss.populated.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 0', new Blob(['adios mundo'], { type: 'text/plain' })),
         { overwrite: true })
       const file = await fss.populated.getFile(path)
       expect(file).to.not.be.null
       expect(file).to.have.property('path', 'dir1/subdir2/prueba1.txt')
       expect(file).to.have.property('label', 'texto prueba 0')
-      expect(file).to.have.property('blob', window.btoa('adios mundo'))
+      expect(file).to.have.property('blob')
+      expect(file.blob.text()).to.eventually.equal('adios mundo')
     })
 
     step('When we add file to a not existent subdirectory, it must fail', async function () {
-      await fss.empty.addFile(new FileStorage.File('no_exists_dir/prueba0.txt', 'texto prueba 666', 'text/plain', window.btoa('adios mundo')))
+      await fss.empty.addFile(new FileStorage.File('no_exists_dir/prueba0.txt', 'texto prueba 666', new Blob(['adios mundo'], { type: 'text/plain' })))
         .then(() => assert.fail('addFile must fail when try to write the file on a not existent directory'),
           err => {
             expect(err).to.be.instanceof(FileStorage.InvalidPathError)
@@ -131,7 +132,7 @@ describe('FileStorage', function () {
     })
 
     step('When we add file to a invalid path, it must fail', async function () {
-      await fss.empty.addFile(new FileStorage.File('', 'texto prueba 666', 'text/plain', window.btoa('adios mundo')))
+      await fss.empty.addFile(new FileStorage.File('', 'texto prueba 666', new Blob(['adios mundo'], { type: 'text/plain' })))
         .then(() => assert.fail('addFile must fail when try to write a file with a invalid path.'),
           err => {
             expect(err).to.be.instanceof(FileStorage.InvalidPathError)
@@ -163,7 +164,7 @@ describe('FileStorage', function () {
 
   describe('#delete ()', function () {
     step('Deleting an existing file, must return true', async function () {
-      const path = await fss.populated.addFile(new FileStorage.File('deleted1.txt', 'deleted1', 'text/plain', window.btoa('adios mundo')))
+      const path = await fss.populated.addFile(new FileStorage.File('deleted1.txt', 'deleted1', new Blob(['adios mundo'], { type: 'text/plain' })))
       await expect(fss.populated.delete(path))
         .to.eventually.equal(true)
     })
