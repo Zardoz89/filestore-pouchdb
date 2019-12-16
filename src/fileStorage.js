@@ -7,7 +7,7 @@
 /* eslint-env browser, es2017 */
 import { DEFAULT_DATABASE_NAME, PATH_SEPARATOR, DOCUMENT_ID_PREFIX } from './constants.js'
 import { normalizePath, getFatherDirectory } from './utils.js'
-import { File, Directory } from './File.js'
+import { FsFile, Directory } from './File.js'
 import { FileStoreError, unknowError } from './FileStoreError'
 import FileNotFoundError from './FileNotFoundError'
 import FileWithSamePath from './FileWithSamePath'
@@ -25,7 +25,7 @@ PouchDb.plugin(FindPlugin)
  */
 function dbDocumentToFileAdapter(dbDocument) {
   if (dbDocument.isDirectory) {
-    return new Directory(File.getPathFromPathElements(dbDocument.pathElements))
+    return new Directory(FsFile.getPathFromPathElements(dbDocument.pathElements))
   }
   let blob = null
   if (dbDocument._attachments && dbDocument._attachments.self) {
@@ -33,7 +33,7 @@ function dbDocumentToFileAdapter(dbDocument) {
       blob = dbDocument._attachments.self.data
     }
   }
-  return new File(File.getPathFromPathElements(dbDocument.pathElements), dbDocument.label, blob, dbDocument.lastModified)
+  return new FsFile(FsFile.getPathFromPathElements(dbDocument.pathElements), dbDocument.label, blob, dbDocument.lastModified)
 }
 
 /**
@@ -48,7 +48,7 @@ async function verifyFatherDirectoryExists(db, pathElements, throwError) {
     const fatherDirectoryDocument = await searchDocumentsByPath(db, fatherDirectory)
     if (fatherDirectoryDocument.length === 0) {
       if (throwError) {
-        throw new InvalidPathError(`Father directory ${File.getPathFromPathElements(fatherDirectory)} not exists.`)
+        throw new InvalidPathError(`Father directory ${FsFile.getPathFromPathElements(fatherDirectory)} not exists.`)
       }
       return false
     }
@@ -232,7 +232,7 @@ class FileStorage {
   async getFile(path) {
     path = normalizePath(path)
     const docId = DOCUMENT_ID_PREFIX + path
-    const doc = await this.db.get(docId, {attachments: true, binary: true})
+    const doc = await this.db.get(docId, { attachments: true, binary: true })
       .catch(err => {
         if (err.name === 'not_found') {
           throw new FileNotFoundError(`File with path ${path} not found.`)
@@ -373,7 +373,7 @@ async function initFileSystem(databaseName) {
 }
 
 export default {
-  File,
+  FsFile,
   FileStorage,
   initFileSystem,
   PATH_SEPARATOR,

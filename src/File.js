@@ -6,9 +6,9 @@ import { PATH_SEPARATOR } from './constants.js'
 import { normalizeString, normalizePath } from './utils.js'
 
 /**
- * File class that represents a file stored on it
+ * Class that represents a file stored on FileStorage
  */
-export class File {
+export class FsFile {
   /**
    * Constructor
    * @param {string} path - Path of the file
@@ -18,7 +18,7 @@ export class File {
   constructor(path, label, blob, ...[lastModified]) {
     this._path = normalizePath(path)
     if (typeof label === 'undefined' || label === null) {
-      const pathElements = File.getPathElements(this.path)
+      const pathElements = FsFile.getPathElements(this.path)
       this._label = pathElements[pathElements.length - 1]
     } else {
       this._label = normalizeString(label)
@@ -63,7 +63,7 @@ export class File {
 
   /** Return the path elements */
   getPathElements() {
-    return File.getPathElements(this.path)
+    return FsFile.getPathElements(this.path)
   }
 
   /** Split a valid path on path elements */
@@ -80,7 +80,7 @@ export class File {
 /**
  * Class that represents a Directory
  */
-export class Directory extends File {
+export class Directory extends FsFile {
   /**
    * Constructor
    * @param {string} path
