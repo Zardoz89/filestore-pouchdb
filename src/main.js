@@ -3,7 +3,7 @@ import FileStorage from './fileStorage.js'
 import { expect, assert, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { mocha, describe, it, before, after } from 'mocha'
-import { step, xstep } from 'mocha-steps'
+import { step } from 'mocha-steps'
 
 use(chaiAsPromised)
 
@@ -99,7 +99,7 @@ describe('FileStorage', function () {
 
     step('When we add file with the same path and without overwrite enabled, it must fail', async function () {
       await fss.populated.addFile(new FileStorage.File('dir1/subdir2/prueba1.txt', 'texto prueba 0x0', 'text/plain', window.btoa('adios mundo')))
-        .then(result => assert.fail('addFile must fail when try to overwrite the file without the flag.'),
+        .then(() => assert.fail('addFile must fail when try to overwrite the file without the flag.'),
           err => {
             expect(err).to.be.instanceof(FileStorage.FileWithSamePath)
           })
@@ -165,7 +165,7 @@ describe('FileStorage', function () {
 
   describe('#delete ()', function () {
     step('Deleting an existing file, must return true', async function () {
-      const path = await fss.populated.addFile(new FileStorage.File('deleted1.txt', 'deleted1', '', 'adios mundo'))
+      const path = await fss.populated.addFile(new FileStorage.File('deleted1.txt', 'deleted1', 'text/plain', window.btoa('adios mundo')))
       await expect(fss.populated.delete(path))
         .to.eventually.equal(true)
     })
@@ -234,20 +234,16 @@ describe('FileStorage', function () {
     })
 
     step('Deleting a whole directory structure with recursive', async function () {
-      const paths = await fss.populated.listAllFiles({ onlyPaths: true })
-      console.log('#rmdir 2', paths)
-      const deleted = await fss.populated.rmDir('dir1/subdir1', { recursive: true})
+      const deleted = await fss.populated.rmDir('dir1/subdir1', { recursive: true })
       expect(deleted).to.be.true
-      /*
-      await Promile.all([
+      await Promise.all([
         fss.populated.getFile('dir1/subdir1'),
         fss.populated.getFile('dir1/subdir1/prueba3.txt'),
-    ])
+      ])
         .then(() => assert.fail('getFile must fail when try to get a not existing file.'),
           err => {
             expect(err).to.be.instanceof(FileStorage.FileNotFoundError)
           })
-          */
     })
   })
 
@@ -260,7 +256,6 @@ describe('FileStorage', function () {
           expect(files).to.not.be.null
           expect(files).to.have.lengthOf(9)
           const paths = files.map(file => file.path)
-          console.log('paths', paths)
           expect(paths).to.have.ordered.members([
             'dir1',
             'dir1/subdir1',
@@ -279,7 +274,6 @@ describe('FileStorage', function () {
       const paths = await fss.populated2.listAllFiles({ onlyPaths: true })
       expect(paths).to.not.be.null
       expect(paths).to.have.lengthOf(9)
-      console.log('paths', paths)
       expect(paths).to.have.ordered.members([
         'dir1',
         'dir1/subdir1',
@@ -297,7 +291,7 @@ describe('FileStorage', function () {
   describe('#listAllFilesOnAPath()', function () {
     this.slow(500)
 
-    it('Must return all files stored, showing the hierarchy', async function () {
+    it('Must return all childrens of a directory, showing the hierarchy', async function () {
       const filesDir1 = await fss.populated2.listAllFilesOnAPath('dir1')
       expect(filesDir1).to.not.be.null
       expect(filesDir1).to.have.lengthOf(2)
@@ -316,69 +310,27 @@ describe('FileStorage', function () {
         'dir1/subdir1/prueba4 con espacios ñ €.txt'
       ])
     })
+
+    it('Must return all childrens paths of a directory, showing the hierarchy', async function () {
+      const paths1 = await fss.populated2.listAllFilesOnAPath('dir1', { onlyPaths: true })
+      expect(paths1).to.not.be.null
+      expect(paths1).to.have.lengthOf(2)
+      expect(paths1).to.have.ordered.members([
+        'dir1/subdir1',
+        'dir1/subdir2',
+      ])
+
+      const paths2 = await fss.populated2.listAllFilesOnAPath('dir1/subdir1', { onlyPaths: true })
+      expect(paths2).to.not.be.null
+      expect(paths2).to.have.lengthOf(2)
+      expect(paths2).to.have.ordered.members([
+        'dir1/subdir1/prueba3.txt',
+        'dir1/subdir1/prueba4 con espacios ñ €.txt',
+      ])
+    })
   })
 })
-
 // mocha.checkLeaks()
 mocha.run()
-
-/*
-console.log('Hola')
-
-const fileStorage = FileStorage.initFileSystem()
-
-console.log(fileStorage)
-
-fileStorage.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', '', 'hola mundo'))
-  .catch(console.error.bind(console))
-fileStorage.mkDir('/dir')
-  .catch(console.error.bind(console))
-fileStorage.addFile(new FileStorage.File('/dir/prueba1.txt', 'texto prueba 1', '', 'hola mundo'))
-  .catch(console.error.bind(console))
-fileStorage.mkDir('/dir2')
-  .catch(console.error.bind(console))
-fileStorage.addFile(new FileStorage.File('/dir2/prueba2.txt', 'texto prueba 2', '', 'hola mundo'))
-  .catch(console.error.bind(console))
-fileStorage.mkDir('/dir/subdir')
-  .catch(console.error.bind(console))
-fileStorage.addFile(new FileStorage.File('/dir/subdir/prueba2.txt', 'texto prueba 3', '', 'hola mundo'))
-  .catch(console.error.bind(console))
-
-fileStorage.listAllFiles()
-  .then(files => {
-    console.log(files)
-  })
-  .catch(console.error.bind(console))
-
-fileStorage.getFile('texto prueba 0')
-  .then(file => console.log(file))
-  .catch(console.error.bind(console))
-
-fileStorage.getFile('texto prueba 3')
-  .then(file => console.log(file))
-  .catch(console.error.bind(console))
-
-fileStorage.getFile('texto prueba 99')
-  .then(file => console.log(file))
-  .catch(console.error.bind(console))
-
-fileStorage.getFile('prueba0.txt')
-  .then(file => console.log(file))
-  .catch(console.error.bind(console))
-
-fileStorage.getFile('dir/prueba1.txt')
-  .then(file => console.log(file))
-  .catch(console.error.bind(console))
-
-fileStorage.getFile('dir/prueba99.txt')
-  .then(file => console.log(file))
-  .catch(console.error.bind(console))
-
-// Se hace esto con un timeout para que no lance el error de mutación
-setTimeout(function () {
-  fileStorage.format()
-    .catch(console.error.bind(console))
-}, 250)
-*/
 
 // vim: set backupcopy=yes :

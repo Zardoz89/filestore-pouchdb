@@ -210,7 +210,6 @@ class FileStorage {
 
     // Check if it have childrens and implement the logic of options.recursive
     const childrens = await this.listAllFilesOnAPath(path, { onlyPaths: true })
-    console.debug('rmDir', path, childrens)
     if (childrens.length > 0 && !options.recursive) {
       return false
     } else if (options.recursive) {
