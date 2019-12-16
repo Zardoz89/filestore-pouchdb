@@ -16,12 +16,12 @@ export class File {
    * @param {blob} blob - A blob to be stored
    */
   constructor(path, label, blob, ...[lastModified]) {
-    this.path = normalizePath(path)
+    this._path = normalizePath(path)
     if (typeof label === 'undefined' || label === null) {
       const pathElements = File.getPathElements(this.path)
-      this.label = pathElements[pathElements.length - 1]
+      this._label = pathElements[pathElements.length - 1]
     } else {
-      this.label = normalizeString(label)
+      this._label = normalizeString(label)
     }
     this._blob = blob
     if (lastModified) {
@@ -31,6 +31,23 @@ export class File {
     }
   }
 
+  get path() {
+    return this._path
+  }
+
+  set path(path) {
+    this._path = normalizePath(path)
+  }
+
+  get label() {
+    return this._label
+  }
+
+  set label(label) {
+    this._label = normalizeString(label)
+  }
+
+  /** Returns a blob with the content of this file */
   get blob() {
     return this._blob
   }
