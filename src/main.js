@@ -209,6 +209,15 @@ describe('FileStorage', function () {
             expect(err).to.be.instanceof(FileStorage.InvalidPathError)
           })
     })
+
+    step('Creating a subdir with parent option, not requieres a father directory', async function () {
+      const dirPath = await fss.empty.mkDir('dir3/foo/bar/baz', { parents: true })
+      const dir = await fss.empty.getFile(dirPath)
+      expect(dir).to.not.be.null
+      expect(dir).to.have.property('path', 'dir3/foo/bar/baz')
+      expect(dir).to.have.property('label', 'baz')
+      expect(dir).to.have.property('blob', null)
+    })
   })
 
   describe('#rmDir()', function () {

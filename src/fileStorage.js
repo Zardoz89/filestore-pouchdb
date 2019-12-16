@@ -161,6 +161,25 @@ class FileStorage {
    */
   async mkDir(path, options = { parents: false }) {
     const directory = new Directory(path, name)
+    if (options.parents) {
+      const pathElements = directory.getPathElements().map((val, index, arr) => {
+        if (index === 0) {
+          return val
+        }
+        return arr.slice(0, index + 1).join(PATH_SEPARATOR)
+      })
+      for (const element of pathElements) {
+        console.log(element)
+        await this.addFile(new Directory(element))
+          .catch(err => {
+            if (!(err instanceof FileWithSamePath)) {
+              throw err
+            }
+          })
+      }
+      return directory.path
+    }
+
     return this.addFile(directory)
   }
 
