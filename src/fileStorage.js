@@ -4,10 +4,13 @@
  * Handles a simple file storage over PouchDB. Mimics some functionality of a virtual filesystem like directories and
  * file hierarchy, but avoids to try to be a full virtual filesystem.
  */
-import { DEFAULT_DATABASE_NAME, PATH_SEPARATOR, DOCUMENT_ID_PREFIX } from './contants.js'
+import { DEFAULT_DATABASE_NAME, PATH_SEPARATOR, DOCUMENT_ID_PREFIX } from './constants.js'
 import { normalizePath, getFatherDirectory } from './utils.js'
 import { File, Directory } from './File.js'
-import { FileStoreError, unknowError, FileNotFoundError, FileWithSamePath, InvalidPathError } from './errors.js'
+import { FileStoreError, unknowError } from './FileStoreError'
+import FileNotFoundError from './FileNotFoundError'
+import FileWithSamePath from './FileWithSamePath'
+import InvalidPathError from './InvalidPathError'
 import { DbDocument } from './DbDocument.js'
 
 import PouchDb from 'pouchdb'

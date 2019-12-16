@@ -53,16 +53,19 @@ before(async function () {
 })
 
 after(async function () {
+  this.timeout(5000)
   const fssPromises = []
   for (const fs in fss) {
-    fssPromises.push(fss[fs].unwrap().destroy())
+    if (fss[fs] !== null) {
+      fssPromises.push(fss[fs].unwrap().destroy())
+    }
   }
   await Promise.all(fssPromises)
 })
 
 describe('FileStorage', function () {
   describe('#initFileSystem()', function () {
-    this.slow(1000)
+    this.slow(1500)
 
     step('To return a FileStorage instance', async function () {
       const fs = await FileStorage.initFileSystem()
@@ -70,11 +73,13 @@ describe('FileStorage', function () {
       expect(fs).to.have.property('addFile').that.is.a('function')
       expect(fs).to.have.property('unwrap').that.is.a('function')
 
-      await fs.unwrap().destroy()
+      //await fs.unwrap().destroy()
     })
   })
 
   describe('#addFile()', function () {
+    this.slow(100)
+
     after(async function () {
       await fss.empty.format()
     })

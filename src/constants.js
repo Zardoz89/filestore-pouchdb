@@ -1,5 +1,5 @@
 /**
- * Contants used everywhere on FileStorage
+ * Constants used everywhere on FileStorage
  */
 
 /** Default database name to use @constant {string} @default */

@@ -2,7 +2,7 @@
  * Misc helper functions
  */
 
-import { PATH_SEPARATOR } from './contants.js'
+import { PATH_SEPARATOR } from './constants.js'
 
 /**
  * Normalizes strings

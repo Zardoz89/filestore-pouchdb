@@ -1,7 +1,7 @@
 /**
  * File and Directory classes
  */
-import { PATH_SEPARATOR } from './contants.js'
+import { PATH_SEPARATOR } from './constants.js'
 import { normalizeString, normalizePath } from './utils.js'
 
 /**
