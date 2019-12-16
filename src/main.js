@@ -32,6 +32,10 @@ before(async function () {
       return fss
     }))
 
+  await fss.empty.format()
+  await fss.populated.format()
+  await fss.populated2.format()
+
   await fss.populated.addFile(new FileStorage.File('prueba0.txt', 'texto prueba 0', 'text/plain', window.btoa('hola mundo')))
   await fss.populated.mkDir('dir1')
   await fss.populated.mkDir('dir2')
@@ -50,17 +54,6 @@ before(async function () {
   await fss.populated2.addFile(new FileStorage.File('dir1/subdir2/prueba2.txt', 'texto prueba 2', 'text/plain', window.btoa('hola mundo3')))
   await fss.populated2.addFile(new FileStorage.File('dir1/subdir1/prueba3.txt', 'texto prueba 3', 'text/plain', window.btoa('hola mundo4')))
   await fss.populated2.addFile(new FileStorage.File('dir1/subdir1/prueba4 con espacios ñ €.txt', 'texto prueba 4', 'text/plain', window.btoa('unicode y eso')))
-})
-
-after(async function () {
-  this.timeout(5000)
-  const fssPromises = []
-  for (const fs in fss) {
-    if (fss[fs] !== null) {
-      fssPromises.push(fss[fs].unwrap().destroy())
-    }
-  }
-  await Promise.all(fssPromises)
 })
 
 describe('FileStorage', function () {
