@@ -33,7 +33,7 @@ function dbDocumentToFileAdapter(dbDocument) {
       blob = dbDocument._attachments.self.data
     }
   }
-  return new File(File.getPathFromPathElements(dbDocument.pathElements), dbDocument.label, blob)
+  return new File(File.getPathFromPathElements(dbDocument.pathElements), dbDocument.label, blob, dbDocument.lastModified)
 }
 
 /**
@@ -126,7 +126,7 @@ class FileStorage {
     // Verify that father directory exists
     await verifyFatherDirectoryExists(this.db, pathElements, true)
 
-    const document = new DbDocument(documentId, pathElements, file.label, file instanceof Directory, file.blob)
+    const document = new DbDocument(documentId, pathElements, file.label, file instanceof Directory, file.lastModified, file.blob)
 
     // Check file duplication
     const originalDoc = await this.db.get(documentId)

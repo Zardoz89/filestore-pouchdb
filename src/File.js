@@ -15,7 +15,7 @@ export class File {
    * @param {array} label - User label of the file. If is ommited would be the last part of the path
    * @param {blob} blob - A blob to be stored
    */
-  constructor(path, label, blob) {
+  constructor(path, label, blob, ...[lastModified]) {
     this.path = normalizePath(path)
     if (typeof label === 'undefined' || label === null) {
       const pathElements = File.getPathElements(this.path)
@@ -23,7 +23,25 @@ export class File {
     } else {
       this.label = normalizeString(label)
     }
-    this.blob = blob
+    this._blob = blob
+    if (lastModified) {
+      this._lastModified = lastModified
+    } else {
+      this._lastModified = Date.now()
+    }
+  }
+
+  get blob() {
+    return this._blob
+  }
+
+  /**
+   * The File.lastModified read-only property provides the last modified date of the file as the number of
+   * milliseconds since the Unix epoch (January 1, 1970 at midnight). Files without a known last modified date return
+   * the current date.
+   */
+  get lastModified() {
+    return this._lastModified
   }
 
   /** Return the path elements */

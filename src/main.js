@@ -146,6 +146,7 @@ describe('FileStorage', function () {
       expect(file1).to.not.be.null
       expect(file1).to.have.property('path', 'prueba0.txt')
       expect(file1).to.have.property('label', 'texto prueba 0')
+      console.log(file1)
 
       const file2 = await fss.populated2.getFile('dir1/subdir2/prueba1.txt')
       expect(file2).to.not.be.null

@@ -9,13 +9,15 @@ export default class DbDocument {
    * @param {array} pathElements
    * @param {string} label
    * @param {boolean} isDirectory - Flag that marks the document as a directory
-   * @param {blob|string} blob - A blob to be stored as attachment
+   * @param {number} lastModified - Number of milliseconds since the Unix epoch (January 1, 1970 at midnight)
+   * @param {blob} blob - A blob to be stored as attachment
    */
-  constructor(_id, pathElements, label, isDirectory, blob) {
+  constructor(_id, pathElements, label, isDirectory, lastModified, blob) {
     this._id = _id
     this.pathElements = pathElements
     this.label = label
     this.isDirectory = isDirectory
+    this.lastModified = lastModified
     if (blob != null) {
       this._attachments = {
         self: {
