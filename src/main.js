@@ -37,24 +37,27 @@ before(async function () {
   await fss.populated.format()
   await fss.populated2.format()
 
-  await fss.populated.addFile(new FileStorage.FsFile('prueba0.txt', 'texto prueba 0', new Blob(['hola mundo'], { type: 'text/plain' })))
   await fss.populated.mkDir('dir1')
   await fss.populated.mkDir('dir2')
+  await fss.populated.addFile(new FileStorage.FsFile('prueba0.txt', 'texto prueba 0', new Blob(['hola mundo'], { type: 'text/plain' })))
   await fss.populated.mkDir('dir1/subdir1')
   await fss.populated.mkDir('dir1/subdir2')
   await fss.populated.addFile(new FileStorage.FsFile('dir1/subdir2/prueba1.txt', 'texto prueba 1', new Blob(['hola mundo2'], { type: 'text/plain' })))
   await fss.populated.addFile(new FileStorage.FsFile('dir1/subdir2/prueba2.txt', 'texto prueba 2', new Blob(['hola mundo3'], { type: 'text/plain' })))
   await fss.populated.addFile(new FileStorage.FsFile('dir1/subdir1/prueba3.txt', 'texto prueba 3', new Blob(['hola mundo4'], { type: 'text/plain' })))
 
-  await fss.populated2.addFile(new FileStorage.FsFile('prueba0.txt', 'texto prueba 0', new Blob(['hola mundo'], { type: 'text/plain' })))
   await fss.populated2.mkDir('dir1')
   await fss.populated2.mkDir('dir2')
   await fss.populated2.mkDir('dir1/subdir1')
+  await fss.populated2.addFile(new FileStorage.FsFile('prueba0.txt', 'texto prueba 0', new Blob(['hola mundo'], { type: 'text/plain' })))
   await fss.populated2.mkDir('dir1/subdir2')
   await fss.populated2.addFile(new FileStorage.FsFile('dir1/subdir2/prueba1.txt', 'texto prueba 1', new Blob(['hola mundo2'], { type: 'text/plain' })))
   await fss.populated2.addFile(new FileStorage.FsFile('dir1/subdir2/prueba2.txt', 'texto prueba 2', new Blob(['hola mundo3'], { type: 'text/plain' })))
   await fss.populated2.addFile(new FileStorage.FsFile('dir1/subdir1/prueba3.txt', 'texto prueba 3', new Blob(['hola mundo4'], { type: 'text/plain' })))
   await fss.populated2.addFile(new FileStorage.FsFile('dir1/subdir1/prueba4 con espacios ñ €.txt', 'texto prueba 4', new Blob(['unicode y eso'], { type: 'text/plain' })))
+  await fss.populated2.mkDir('a/b/c/d/e/f/g', { parents: true })
+  await fss.populated2.mkDir('z/u/v/w', { parents: true })
+  await fss.populated2.mkDir('1/2', { parents: true })
 })
 
 describe('FileStorage', function () {
@@ -263,9 +266,18 @@ describe('FileStorage', function () {
       return fss.populated2.listAllFiles()
         .then(files => {
           expect(files).to.not.be.null
-          expect(files).to.have.lengthOf(9)
+          expect(files).to.have.lengthOf(22)
           const paths = files.map(file => file.path)
           expect(paths).to.have.ordered.members([
+            '1',
+            '1/2',
+            'a',
+            'a/b',
+            'a/b/c',
+            'a/b/c/d',
+            'a/b/c/d/e',
+            'a/b/c/d/e/f',
+            'a/b/c/d/e/f/g',
             'dir1',
             'dir1/subdir1',
             'dir1/subdir1/prueba3.txt',
@@ -274,16 +286,30 @@ describe('FileStorage', function () {
             'dir1/subdir2/prueba1.txt',
             'dir1/subdir2/prueba2.txt',
             'dir2',
-            'prueba0.txt'
+            'prueba0.txt',
+            'z',
+            'z/u',
+            'z/u/v',
+            'z/u/v/w',
           ])
         })
     })
 
     it('Must return a list of paths of the files stored, showing the hierarchy', async function () {
       const paths = await fss.populated2.listAllFiles({ onlyPaths: true })
+      console.log(paths)
       expect(paths).to.not.be.null
-      expect(paths).to.have.lengthOf(9)
+      expect(paths).to.have.lengthOf(22)
       expect(paths).to.have.ordered.members([
+        '1',
+        '1/2',
+        'a',
+        'a/b',
+        'a/b/c',
+        'a/b/c/d',
+        'a/b/c/d/e',
+        'a/b/c/d/e/f',
+        'a/b/c/d/e/f/g',
         'dir1',
         'dir1/subdir1',
         'dir1/subdir1/prueba3.txt',
@@ -292,7 +318,11 @@ describe('FileStorage', function () {
         'dir1/subdir2/prueba1.txt',
         'dir1/subdir2/prueba2.txt',
         'dir2',
-        'prueba0.txt'
+        'prueba0.txt',
+        'z',
+        'z/u',
+        'z/u/v',
+        'z/u/v/w',
       ])
     })
   })

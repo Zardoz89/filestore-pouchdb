@@ -171,7 +171,6 @@ class FileStorage {
         return arr.slice(0, index + 1).join(PATH_SEPARATOR)
       })
       for (const element of pathElements) {
-        console.log(element)
         await this.addFile(new Directory(element))
           .catch(err => {
             if (!(err instanceof FileWithSamePath)) {
