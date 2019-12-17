@@ -19,6 +19,7 @@
     "@babel/core": "^7.7.5",
     "@babel/preset-env": "^7.7.6",
     "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
     "eslint": "^6.7.1",
     "eslint-config-standard": "^14.1.0",
     "eslint-plugin-import": "^2.18.2",
@@ -31,7 +32,7 @@
     "parcel-bundler": "^1.12.4"
   },
   "dependencies": {
-    "chai-as-promised": "^7.1.1",
+    "browser-or-node": "^1.2.1",
     "pouchdb": "^7.1.1",
     "pouchdb-browser": "^7.1.1",
     "pouchdb-find": "^7.1.1"

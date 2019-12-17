@@ -28,12 +28,14 @@ function dbDocumentToFileAdapter(dbDocument) {
     return new Directory(FsFile.getPathFromPathElements(dbDocument.pathElements))
   }
   let blob = null
+  let type = null
   if (dbDocument._attachments && dbDocument._attachments.self) {
     if (!dbDocument._attachments.self.stub) {
       blob = dbDocument._attachments.self.data
+      type = dbDocument._attachments.self.content_type
     }
   }
-  return new FsFile(FsFile.getPathFromPathElements(dbDocument.pathElements), dbDocument.label, blob, dbDocument.lastModified)
+  return new FsFile(FsFile.getPathFromPathElements(dbDocument.pathElements), dbDocument.label, blob, type, dbDocument.lastModified)
 }
 
 /**
@@ -126,7 +128,7 @@ class FileStorage {
     // Verify that father directory exists
     await verifyFatherDirectoryExists(this.db, pathElements, true)
 
-    const document = new DbDocument(documentId, pathElements, file.label, file instanceof Directory, file.lastModified, file.blob)
+    const document = new DbDocument(documentId, pathElements, file.label, file instanceof Directory, file.lastModified, file.blob, file.type)
 
     // Check file duplication
     const originalDoc = await this.db.get(documentId)
