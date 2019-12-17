@@ -1,5 +1,5 @@
 /* eslint-env browser, mocha, es2017 */
-import FileStorage from './fileStorage.js'
+import FileStorage from '/src/fileStorage.js'
 
 import { expect, assert, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'

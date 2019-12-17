@@ -4,6 +4,11 @@
  * @property pouchDbError PouchDb error if there was an error throw by PouchDb
  */
 export class FileStoreError extends Error {
+  /**
+   * Constructor
+   * @param {object} pouchDbError - PouchDb error object
+   * @param {...*} params
+   */
   constructor(pouchDbError = {}, ...params) {
     super(...params)
     // Maintains proper stack trace for where our error was thrown (only available on V8)
@@ -16,6 +21,7 @@ export class FileStoreError extends Error {
   }
 }
 
+/** @ignore */
 export default FileStoreError
 
 /**

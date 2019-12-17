@@ -1,16 +1,25 @@
 /**
  * Document to be stored in the database
+ *
+ * @module
+ * @private
  */
-/* eslint-env browser, es2017 */
-export default class DbDocument {
+/* eslint-env es2017 */
+
+/**
+ * Document to be stored in teh pouchdb database
+ * @private
+ */
+class DbDocument {
   /**
    * Constructor
+   * @private
    * @param {string} id
    * @param {array} pathElements
    * @param {string} label
    * @param {boolean} isDirectory - Flag that marks the document as a directory
    * @param {number} lastModified - Number of milliseconds since the Unix epoch (January 1, 1970 at midnight)
-   * @param {blob||buffer} blob - A blob to be stored as attachment
+   * @param {blob|buffer} blob - A blob to be stored as attachment
    * @param {string} type - Content type of thw data to be stored
    */
   constructor(_id, pathElements, label, isDirectory, lastModified, blob, type) {
@@ -29,3 +38,6 @@ export default class DbDocument {
     }
   }
 }
+
+export default DbDocument
+

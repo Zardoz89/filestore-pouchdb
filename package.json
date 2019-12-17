@@ -1,7 +1,7 @@
 {
-  "name": "prueba_pdb",
-  "version": "1.0.0",
-  "description": "",
+  "name": "filestorage-pouchdb",
+  "version": "0.0.1",
+  "description": "Simple file storage over a PouchDb database",
   "private": true,
   "type": "module",
   "main": "./src/fileStorage.js",
@@ -13,13 +13,25 @@
     "fix-lint": "eslint ./src/ --ext .js --fix",
     "generate-docs": "jsdoc -r  ./src/ -d docs -c jsdoc.conf README.md"
   },
-  "author": "",
+  "files": [
+    "src"
+  ],
+  "keywords": [
+    "file",
+    "file storage",
+    "storage",
+    "pouchdb",
+    "indexeddb",
+    "filesystem"
+  ],
+  "author": "Luis Panadero Guardeño  <luis(dot)panadero(at)gmail.com>",
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.7.5",
     "@babel/preset-env": "^7.7.6",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
+    "docdash": "^1.1.1",
     "eslint": "^6.7.1",
     "eslint-config-standard": "^14.1.0",
     "eslint-plugin-import": "^2.18.2",

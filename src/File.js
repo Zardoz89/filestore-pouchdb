@@ -1,5 +1,7 @@
 /**
  * File and Directory classes
+ *
+ * @module
  */
 /* eslint-env browser, es2017 */
 import { isBrowser } from 'browser-or-node'
@@ -14,7 +16,7 @@ export class FsFile {
    * Constructor
    * @param {string} path - Path of the file
    * @param {array} label - User label of the file. If is ommited would be the last part of the path
-   * @param {blob||buffer} blob - A blob to be stored
+   * @param {blob|buffer} blob - A blob to be stored
    * @param {string} [type] - Content type of the data to be stored
    * @param {number} [lastModified] - Last modified date of the file as the number of milliseconds since the Unix epoch
    */
@@ -92,6 +94,7 @@ export class FsFile {
 
 /**
  * Class that represents a Directory
+ * @extends FsFile
  */
 export class Directory extends FsFile {
   /**

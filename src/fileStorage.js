@@ -1,5 +1,5 @@
 /**
- * @file Simple file storage over PouchDb
+ * Simple file storage over PouchDb
  *
  * Handles a simple file storage over PouchDB. Mimics some functionality of a virtual filesystem like directories and
  * file hierarchy, but avoids to try to be a full virtual filesystem.

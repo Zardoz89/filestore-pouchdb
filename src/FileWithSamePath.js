@@ -2,8 +2,9 @@ import FileStoreError from './FileStoreError'
 
 /**
  * File with the same path
+ * @extends FileStoreError
  */
-export default class FileWithSamePath extends FileStoreError {
+class FileWithSamePath extends FileStoreError {
   constructor(pouchDbError = {}, ...params) {
     super(pouchDbError, ...params)
 
@@ -14,4 +15,6 @@ export default class FileWithSamePath extends FileStoreError {
     this.name = this.constructor.name
   }
 }
+
+export default FileWithSamePath
 
