@@ -344,37 +344,54 @@ async function initFileSystem(database, pouchdbOptions = {}) {
     db = new PouchDb(database, pouchdbOptions)
   }
 
-  // Adds a index to quickly search by path
-  await db.createIndex({
-    index: {
-      fields: ['pathElements']
-    }
-  })
+  const initializedDocument = await db.get('_local/filestorage')
     .catch(err => {
-      throw unknowError(err)
+      if (err.name !== 'not_found') {
+        throw unknowError(err)
+      }
     })
+  if (!initializedDocument || initializedDocument.initialized) {
 
-  // Constructs a view to manage the hiearchy
-  const pathViewDocument = {
-    _id: '_design/path',
-    views: {
-      path: {
-        map: function (doc) {
-          /* eslint no-undef: "off" */
-          emit(doc.pathElements, doc)
-        }.toString()
+    // Adds a index to quickly search by path
+    await db.createIndex({
+      index: {
+        fields: ['pathElements']
+      }
+    })
+      .catch(err => {
+        throw unknowError(err)
+      })
+
+    // Constructs a view to manage the hiearchy
+    const pathViewDocument = {
+      _id: '_design/path',
+      views: {
+        path: {
+          map: function (doc) {
+            /* eslint no-undef: "off" */
+            emit(doc.pathElements, doc)
+          }.toString()
+        }
       }
     }
+    await db.put(pathViewDocument)
+      .catch(err => {
+        if (err.name !== 'conflict') {
+          throw err
+        }
+      })
+      .catch(err => {
+        throw unknowError(err)
+      })
+
+    await db.put({
+      _id: '_local/filestorage',
+      initialized: true
+    })
+      .catch(err => {
+        throw unknowError(err)
+      })
   }
-  await db.put(pathViewDocument)
-    .catch(err => {
-      if (err.name !== 'conflict') {
-        throw err
-      }
-    })
-    .catch(err => {
-      throw unknowError(err)
-    })
 
   return new FileStorage(db)
 }
