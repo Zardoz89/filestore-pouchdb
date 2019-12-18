@@ -329,14 +329,20 @@ class FileStorage {
 
 /**
  * Initialice a file system in a PouchDb database
- * @param {string} [databaseName] - The name of the database to use
+ * @param {string|PouchDB} [database] - The name of the database to use or a PouchDB instance
+ * @param {object} [pouchdbOptions] - PouchDb database creation options
  * @return {Promise} A valid instance of FileStorage
  */
-async function initFileSystem(databaseName) {
-  if (!databaseName || databaseName === '') {
-    databaseName = DEFAULT_DATABASE_NAME
+async function initFileSystem(database, pouchdbOptions = {}) {
+  let db = null
+  if (database instanceof PouchDb) {
+    db = database
+  } else {
+    if (!database || database === '') {
+      database = DEFAULT_DATABASE_NAME
+    }
+    db = new PouchDb(database, pouchdbOptions)
   }
-  const db = new PouchDb(databaseName)
 
   // Adds a index to quickly search by path
   await db.createIndex({
