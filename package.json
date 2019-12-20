@@ -25,7 +25,7 @@
     "filesystem"
   ],
   "author": "Luis Panadero Guardeño  <luis(dot)panadero(at)gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.7.5",
     "@babel/preset-env": "^7.7.6",
