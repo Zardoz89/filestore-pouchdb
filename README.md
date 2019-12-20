@@ -1,5 +1,4 @@
-# Simple file storage over PouchDb
-
+# Simple file storage over PouchDb (WIP)
 
 Handles a simple file storage over PouchDB. Mimics some functionality of a
 virtual file system like directories and file hierarchy, but avoids to try to 
@@ -18,14 +17,14 @@ it's identified by his path.
 * Return a File by path
 * Creation and deletion of directories. Directory extends of File without any
     content
+* Equivalent functionality of mkDir -p and rm -r
 * Listing all the files, showing the whole tree hierarchy.
 * Listing all the files of a directory, showing the whole tree hierarchy
 * Methods to delete files, directories and even clean all the whole storage.
 
 ## TODOs
-* Attach file data
-* Delete directory (half working)
 * Brother method of getFile that only returns if the file exists
 * Moar TESTS!
+* Test it over node.js
 
 
