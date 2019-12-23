@@ -1,15 +1,14 @@
-/* eslint-env browser, mocha, es2017 */
+/* eslint-env node, mocha, es2017 */
 import FileStorage from '../src/fileStorage.js'
 
 import { expect, assert, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { mocha, describe, it, before, after } from 'mocha'
 import { step } from 'mocha-steps'
 import { buildTextFile, getTextFileText } from './util.js'
 
 use(chaiAsPromised)
 
-mocha.setup('bdd')
+// mocha.setup('bdd')
 
 let fss = {
   populated: null,
@@ -88,6 +87,7 @@ describe('FileStorage', function () {
           })
       }).to.not.throw()
     })
+
     step('When we add a file to a empty file storage, we must can retrive it', async function () {
       const path = await fss.empty.addFile(buildTextFile('prueba1.txt', 'texto prueba 1', 'hola mundo'))
       const file = await fss.empty.getFile(path)
@@ -124,7 +124,7 @@ describe('FileStorage', function () {
       expect(file).to.have.property('path', 'dir1/subdir2/prueba1.txt')
       expect(file).to.have.property('label', 'texto prueba 0')
       expect(file).to.have.property('blob')
-      expect(file.blob.text()).to.eventually.equal('adios mundo')
+      expect(getTextFileText(file)).to.eventually.equal('adios mundo')
     })
 
     step('When we add file to a not existent subdirectory, it must fail', async function () {
@@ -370,7 +370,4 @@ describe('FileStorage', function () {
     })
   })
 })
-// mocha.checkLeaks()
-mocha.run()
 
-// vim: set backupcopy=yes :

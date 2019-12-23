@@ -162,7 +162,7 @@ class FileStorage {
    * @return {string} Directory path
    */
   async mkDir(path, options = { parents: false }) {
-    const directory = new Directory(path, name)
+    const directory = new Directory(path)
     if (options.parents) {
       const pathElements = directory.getPathElements().map((val, index, arr) => {
         if (index === 0) {
@@ -350,8 +350,8 @@ async function initFileSystem(database, pouchdbOptions = {}) {
         throw unknowError(err)
       }
     })
-  if (!initializedDocument || initializedDocument.initialized) {
 
+  if (!initializedDocument || !initializedDocument.initialized) {
     // Adds a index to quickly search by path
     await db.createIndex({
       index: {
