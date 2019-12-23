@@ -8,7 +8,7 @@
   "module": "./src/fileStorage.js",
   "scripts": {
     "clean": "rm ./dist/*",
-    "dev": "parcel index.html",
+    "dev": "parcel ./test/index.html",
     "lint": "eslint ./src/ --ext .js",
     "fix-lint": "eslint ./src/ --ext .js --fix",
     "generate-docs": "jsdoc -r  ./src/ -d docs -c jsdoc.conf README.md"
