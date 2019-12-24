@@ -1,14 +1,14 @@
 # Simple file storage over PouchDb (WIP)
 
 Handles a simple file storage over PouchDB. Mimics some functionality of a
-virtual file system like directories and file hierarchy, but avoids to try to 
+virtual file system like directories and file hierarchy, but avoids to try to
 be a full virtual file system.
 
 ## Objectives
 
 Store files on the browser, with the optional capacity of synchronize with a
 remote CouchDb database. The retrieving of the files must be fast and each file
-it's identified by his path. 
+it's identified by his path.
 
 ## Features
 
@@ -25,6 +25,5 @@ it's identified by his path.
 ## TODOs
 * Brother method of getFile that only returns if the file exists
 * Moar TESTS!
-* Test it over node.js
 
 
