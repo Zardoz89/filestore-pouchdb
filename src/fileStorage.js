@@ -5,7 +5,7 @@
  * file hierarchy, but avoids to try to be a full virtual filesystem.
  */
 /* eslint-env browser, es2017 */
-import { DEFAULT_DATABASE_NAME, PATH_SEPARATOR, DOCUMENT_ID_PREFIX } from './constants.js'
+import { DEFAULT_DATABASE_NAME, PATH_SEPARATOR, DOCUMENT_ID_PREFIX, INITIALIZED_FLAG_DOCUMENT_ID, VERSION } from './constants.js'
 import { normalizePath, getFatherDirectory } from './utils.js'
 import { FsFile, Directory } from './File.js'
 import { FileStoreError, unknowError } from './FileStoreError'
@@ -77,8 +77,18 @@ async function searchDocumentsByPath(db, pathElements) {
  * File storage wrapper over a PouchDb database
  */
 class FileStorage {
-  constructor(db) {
-    this.db = db
+  /**
+   * @constructor
+   * Initialice a instance of FileStorage
+   * @param {string|PouchDB} [database] - The name of the database to use or a PouchDB instance
+   * @param {object} [pouchdbOptions] - PouchDb database creation options
+   */
+  constructor(database, pouchdbOptions = {}) {
+    this.db = getPouchDatabase(database, pouchdbOptions)
+    const initializedDocument = getInitializedFlagDocument(this.db)
+    if (!initializedDocument || !initializedDocument.initialized) {
+      initializeDatabase(this.db)
+    }
   }
 
   generateFileId(file) {
@@ -325,81 +335,87 @@ class FileStorage {
   unwrap() {
     return this.db
   }
+
+  static async isInitialized(database) {
+    const initializedDocument = await getInitializedFlagDocument(database)
+    return initializedDocument && initializedDocument.initialized
+  }
 }
 
-/**
- * Initialice a file system in a PouchDb database
- * @param {string|PouchDB} [database] - The name of the database to use or a PouchDB instance
- * @param {object} [pouchdbOptions] - PouchDb database creation options
- * @return {Promise} A valid instance of FileStorage
- */
-async function initFileSystem(database, pouchdbOptions = {}) {
-  let db = null
+function getPouchDatabase(database, pouchdbOptions) {
   if (database instanceof PouchDb) {
-    db = database
+    return database
   } else {
     if (!database || database === '') {
       database = DEFAULT_DATABASE_NAME
     }
-    db = new PouchDb(database, pouchdbOptions)
+    return new PouchDb(database, pouchdbOptions)
   }
+}
 
-  const initializedDocument = await db.get('_local/filestorage')
+/**
+ * Returns the initialized flag document
+ */
+async function getInitializedFlagDocument(database) {
+  return database.get(INITIALIZED_FLAG_DOCUMENT_ID)
     .catch(err => {
       if (err.name !== 'not_found') {
         throw unknowError(err)
       }
     })
+}
 
-  if (!initializedDocument || !initializedDocument.initialized) {
-    // Adds a index to quickly search by path
-    await db.createIndex({
-      index: {
-        fields: ['pathElements']
-      }
+async function initializeDatabase(database) {
+  // Adds a index to quickly search by path
+  await database.createIndex({
+    index: {
+      fields: ['pathElements']
+    }
+  })
+    .catch(err => {
+      throw unknowError(err)
     })
-      .catch(err => {
-        throw unknowError(err)
-      })
 
-    // Constructs a view to manage the hiearchy
-    const pathViewDocument = {
-      _id: '_design/path',
-      views: {
-        path: {
-          map: function (doc) {
-            /* eslint no-undef: "off" */
-            emit(doc.pathElements, doc)
-          }.toString()
-        }
+  // Constructs a view to manage the hiearchy
+  const pathViewDocument = {
+    _id: '_design/path',
+    views: {
+      path: {
+        map: function (doc) {
+          /* eslint no-undef: "off" */
+          emit(doc.pathElements, doc)
+        }.toString()
       }
     }
-    await db.put(pathViewDocument)
-      .catch(err => {
-        if (err.name !== 'conflict') {
-          throw err
-        }
-      })
-      .catch(err => {
-        throw unknowError(err)
-      })
-
-    await db.put({
-      _id: '_local/filestorage',
-      initialized: true
-    })
-      .catch(err => {
-        throw unknowError(err)
-      })
   }
+  await database.put(pathViewDocument)
+    .catch(err => {
+      if (err.name !== 'conflict') {
+        throw err
+      }
+    })
+    .catch(err => {
+      throw unknowError(err)
+    })
 
-  return new FileStorage(db)
+  await writeInitializedFlagDocument(database)
+}
+
+/** Writes the initialized flag document to the database */
+async function writeInitializedFlagDocument(database) {
+  await database.put({
+    _id: INITIALIZED_FLAG_DOCUMENT_ID,
+    initialized: true,
+    version: VERSION
+  })
+    .catch(err => {
+      throw unknowError(err)
+    })
 }
 
 export default {
   FsFile,
   FileStorage,
-  initFileSystem,
   PATH_SEPARATOR,
   normalizePath,
   FileStoreError,

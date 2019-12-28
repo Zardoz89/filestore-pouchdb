@@ -10,7 +10,7 @@ use(chaiAsPromised)
 
 // mocha.setup('bdd')
 
-let fss = {
+const fss = {
   populated: null,
   populated2: null,
   empty: null
@@ -18,20 +18,9 @@ let fss = {
 
 before(async function () {
   this.timeout(5000)
-  const fssPromises = []
   for (const fs in fss) {
-    fssPromises.push(FileStorage.initFileSystem(`filesystem_${fs}`))
+    fss[fs] = new FileStorage.FileStorage(`filesystem_${fs}`)
   }
-  await Promise.all(fssPromises)
-    .then((fssArray => {
-      const fssObject = {}
-      for (let i = 0; i < fssArray.length; i++) {
-        const key = Object.keys(fss)[i]
-        fssObject[key] = fssArray[i]
-      }
-      fss = fssObject
-      return fss
-    }))
 
   await fss.empty.format()
   await fss.populated.format()
@@ -61,14 +50,16 @@ before(async function () {
 })
 
 describe('FileStorage', function () {
-  describe('#initFileSystem()', function () {
+  describe('#constructor()', function () {
     this.slow(1500)
 
     step('To return a FileStorage instance', async function () {
-      const fs = await FileStorage.initFileSystem()
+      const fs = new FileStorage.FileStorage()
       expect(fs).to.have.property('format').that.is.a('function')
       expect(fs).to.have.property('addFile').that.is.a('function')
       expect(fs).to.have.property('unwrap').that.is.a('function')
+
+      expect(FileStorage.FileStorage.isInitialized(fs.unwrap())).to.eventually.be.true
     })
   })
 
