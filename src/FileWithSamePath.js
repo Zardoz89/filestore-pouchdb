@@ -1,3 +1,7 @@
+/**
+ * @license MIT
+ * @module FileWithSamePath
+ */
 import FileStoreError from './FileStoreError'
 
 /**

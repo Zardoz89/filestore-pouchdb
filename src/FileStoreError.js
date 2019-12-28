@@ -1,4 +1,9 @@
 /**
+ * @license MIT
+ * @module FileStoreError
+ */
+
+/**
  * Base clase for all FileStorage errors
  *
  * @property pouchDbError PouchDb error if there was an error throw by PouchDb

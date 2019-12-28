@@ -1,12 +1,12 @@
 /**
  * File and Directory classes
- *
- * @module
+ * @license MIT
+ * @module File
  */
 /* eslint-env browser, es2017 */
 import { isBrowser } from 'browser-or-node'
-import { PATH_SEPARATOR } from './constants.js'
-import { normalizeString, normalizePath } from './utils.js'
+import { PATH_SEPARATOR } from './constants'
+import { normalizeString, normalizePath } from './utils'
 
 /**
  * Class that represents a file stored on FileStorage

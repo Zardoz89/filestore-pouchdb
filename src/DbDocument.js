@@ -1,7 +1,7 @@
 /**
  * Document to be stored in the database
- *
- * @module
+ * @license MIT
+ * @module DbDocument
  * @private
  */
 /* eslint-env es2017 */

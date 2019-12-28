@@ -1,11 +1,14 @@
 /**
  * Misc helper functions
+ * @license MIT
+ * @module utils
  */
 
 import { PATH_SEPARATOR } from './constants.js'
 
 /**
- * Normalizes strings
+ * Applies Unicode NFD normalization
+ * @param {string} string - A string to normalize
  */
 export function normalizeString(string) {
   return string.trim().normalize('NFD')
@@ -13,6 +16,7 @@ export function normalizeString(string) {
 
 /**
  * Normalizes a path to avoid problems
+ * @param {string} path - A string with a path to normalize
  */
 export function normalizePath(path) {
   const normalizedPathString = normalizeString(path)

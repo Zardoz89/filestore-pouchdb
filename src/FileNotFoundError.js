@@ -1,3 +1,7 @@
+/**
+ * @license MIT
+ * @module FileNotFoundError
+ */
 import FileStoreError from './FileStoreError'
 
 /**

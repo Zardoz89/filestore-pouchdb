@@ -3,6 +3,8 @@
  *
  * Handles a simple file storage over PouchDB. Mimics some functionality of a virtual filesystem like directories and
  * file hierarchy, but avoids to try to be a full virtual filesystem.
+ * @license MIT
+ * @module fileStorage
  */
 /* eslint-env browser, es2017 */
 import { DEFAULT_DATABASE_NAME, PATH_SEPARATOR, DOCUMENT_ID_PREFIX, INITIALIZED_FLAG_DOCUMENT_ID, VERSION } from './constants.js'
@@ -21,6 +23,7 @@ PouchDb.plugin(FindPlugin)
 
 /**
  * Adapter function that generated a valid File class from a DbDocument class
+ * @private
  * @param {DbDocument} dbDocument
  */
 function dbDocumentToFileAdapter(dbDocument) {
@@ -39,7 +42,8 @@ function dbDocumentToFileAdapter(dbDocument) {
 }
 
 /**
- * Verify if teh father directory exists
+ * Verify if the father directory exists
+ * @private
  * @param db {PouchDb} database
  * @param pathElements {array} pathElements
  * @return {boolean} True if the fatherDirectory exists
@@ -78,8 +82,7 @@ async function searchDocumentsByPath(db, pathElements) {
  */
 class FileStorage {
   /**
-   * @constructor
-   * Initialice a instance of FileStorage
+   * Creates an instance of FileStorage
    * @param {string|PouchDB} [database] - The name of the database to use or a PouchDB instance
    * @param {object} [pouchdbOptions] - PouchDb database creation options
    */
@@ -336,12 +339,22 @@ class FileStorage {
     return this.db
   }
 
+  /**
+   * Checks if a PouchDb database has been initialized as a FileStorage
+   */
   static async isInitialized(database) {
     const initializedDocument = await getInitializedFlagDocument(database)
     return initializedDocument && initializedDocument.initialized
   }
 }
 
+/**
+ * Creates/Returns an instance of PouchDb
+ * @private
+ * @param {string|PouchDb} - database The name of the PouchDb database or a instance of PouchDb
+ * @param pouchdbOptions {object} - An object with the PouchDb options to use
+ * @return A PouchDb instance
+ */
 function getPouchDatabase(database, pouchdbOptions) {
   if (database instanceof PouchDb) {
     return database
@@ -355,6 +368,7 @@ function getPouchDatabase(database, pouchdbOptions) {
 
 /**
  * Returns the initialized flag document
+ * @private
  */
 async function getInitializedFlagDocument(database) {
   return database.get(INITIALIZED_FLAG_DOCUMENT_ID)
@@ -365,6 +379,10 @@ async function getInitializedFlagDocument(database) {
     })
 }
 
+/**
+ * Intializes a PouchDb database to be a valid FileStorage
+ * @private
+ */
 async function initializeDatabase(database) {
   // Adds a index to quickly search by path
   await database.createIndex({
@@ -401,7 +419,10 @@ async function initializeDatabase(database) {
   await writeInitializedFlagDocument(database)
 }
 
-/** Writes the initialized flag document to the database */
+/**
+ * Writes the initialized flag document to the database
+ * @private
+ */
 async function writeInitializedFlagDocument(database) {
   await database.put({
     _id: INITIALIZED_FLAG_DOCUMENT_ID,
@@ -421,7 +442,8 @@ export default {
   FileStoreError,
   FileNotFoundError,
   InvalidPathError,
-  FileWithSamePath
+  FileWithSamePath,
+  VERSION
 }
 
 // vim: set backupcopy=yes :

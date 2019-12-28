@@ -1,3 +1,7 @@
+/**
+ * @license MIT
+ * @module InvalidPathError
+ */
 import FileStoreError from './FileStoreError'
 
 /**
