@@ -1,14 +1,20 @@
 /* eslint-env node, mocha, es2017 */
 import FileStorage from '../src/fileStorage.js'
 
+import PouchDb from 'pouchdb'
+import PouchDbAdapterMemory from 'pouchdb-adapter-memory'
 import { expect, assert, use } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { step } from 'mocha-steps'
 import { buildTextFile, getTextFileText } from './util.js'
 
+// Config PouchDb to use in moemry storage
+PouchDb.plugin(PouchDbAdapterMemory)
+
+// Config Chai plugin
 use(chaiAsPromised)
 
-// mocha.setup('bdd')
+const POUCHDB_OPTIONS = { adapter: 'memory' }
 
 const fss = {
   populated: null,
@@ -19,7 +25,7 @@ const fss = {
 before(async function () {
   this.timeout(5000)
   for (const fs in fss) {
-    fss[fs] = new FileStorage.FileStorage(`filesystem_${fs}`)
+    fss[fs] = new FileStorage.FileStorage(`filesystem_${fs}`, POUCHDB_OPTIONS)
   }
 
   await fss.empty.format()
@@ -54,7 +60,7 @@ describe('FileStorage', function () {
     this.slow(1500)
 
     step('To return a FileStorage instance', async function () {
-      const fs = new FileStorage.FileStorage()
+      const fs = new FileStorage.FileStorage('', POUCHDB_OPTIONS)
       expect(fs).to.have.property('format').that.is.a('function')
       expect(fs).to.have.property('addFile').that.is.a('function')
       expect(fs).to.have.property('unwrap').that.is.a('function')
