@@ -10,6 +10,7 @@
            style="display: none"
            @change="handleFiles"
     />
+    {{ files }}
     <div v-if="isEmpty"
          class="filelist filelist__empty"
          @click="openFileDialog"
@@ -23,7 +24,13 @@
          @dragenter.stop.prevent
          @dragover.stop.prevent="dragFilesOver"
          @drop.stop.prevent="dragFiles" >
-      <button @click="openFileDialog">Add files</buttontn>
+      <ul>
+        <li v-for="file in files">
+          {{ file }}
+          <button @click="openFileDialog">Add files</button>
+        </li>
+      </ul>
+      <button @click="openFileDialog">Add files</button>
       <!--
       <v-list two-line subheader >
         <v-subheader>Files</v-subheader>
@@ -104,12 +111,18 @@ export default {
     noFilesMessage: {type: String, default: 'Drop files here'}
   },
 
+  data() {
+    return {
+      files: []
+    }
+  },
+
   computed: {
     getFileCount() {
-      return 0//this.$store.getters.getFileCount
+      return this.files.length //this.$store.getters.getFileCount
     },
     isEmpty() {
-      return true//this.$store.getters.getFileCount <= 0
+      return this.files.length <= 0 //this.$store.getters.getFileCount <= 0
     },
     /*...mapState([
       'fileList'
@@ -132,7 +145,7 @@ export default {
       reader.onload = (evt) => {
         entry.data = evt.target.result
         console.log("file loaded")
-        // this.$store.commit('replaceFileItem', entry)
+        this.files.push(file.name)
       }
       reader.readAsDataURL(file)
     },
@@ -149,11 +162,10 @@ export default {
     dragFilesOver(evt) {
       evt.dataTransfer.dropEffect = 'copy'
     },
-    /*
     removeFile(index) {
-      this.$store.commit('removeFileItemByIndex', index)
+      console.log("file deleted")
+      this.files.delete(index)
     },
-    */
     openFileDialog() {
       document.getElementById('file').click()
     },
